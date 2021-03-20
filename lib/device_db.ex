@@ -1,4 +1,4 @@
-defmodule DB do
+defmodule DeviceDb do
   use GenServer
 
   def start_link() do
