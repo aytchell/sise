@@ -1,5 +1,6 @@
 defmodule Ssdp.DeviceDb do
   use GenServer
+  require Logger
 
   def child_spec() do
     %{
@@ -21,7 +22,11 @@ defmodule Ssdp.DeviceDb do
     if Map.has_key?(packet, :nt) do
       if Map.has_key?(packet, :usn) do
         GenServer.cast(Ssdp.DeviceDb, {:add, packet})
+      else
+        Logger.warn("Won't add SSDP packet since it's missing 'USN'")
       end
+    else
+      Logger.warn("Won't add SSDP packet since it's missing 'NT'")
     end
   end
 
@@ -29,7 +34,11 @@ defmodule Ssdp.DeviceDb do
     if Map.has_key?(packet, :nt) do
       if Map.has_key?(packet, :usn) do
         GenServer.cast(Ssdp.DeviceDb, {:update, packet})
+      else
+        Logger.warn("Won't update SSDP packet since it's missing 'USN'")
       end
+    else
+      Logger.warn("Won't update SSDP packet since it's missing 'NT'")
     end
   end
 
@@ -37,7 +46,11 @@ defmodule Ssdp.DeviceDb do
     if Map.has_key?(packet, :nt) do
       if Map.has_key?(packet, :usn) do
         GenServer.cast(Ssdp.DeviceDb, {:delete, packet})
+      else
+        Logger.warn("Won't delete SSDP packet since it's missing 'USN'")
       end
+    else
+      Logger.warn("Won't delete SSDP packet since it's missing 'NT'")
     end
   end
 
@@ -48,6 +61,7 @@ defmodule Ssdp.DeviceDb do
 
   @impl true
   def handle_cast({:add, packet}, state) do
+    Logger.info("Adding SSDP packet #{inspect(packet.nt)}")
     {:noreply, Map.update(
       state,                        # current state (to be updated)
       packet.nt,                    # key (device- or service-type)
@@ -62,6 +76,7 @@ defmodule Ssdp.DeviceDb do
   end
 
   def handle_cast({:update, packet}, state) do
+    Logger.info("Updating SSDP packet #{inspect(packet.nt)}")
     {:noreply, Map.update(
       state,                        # current state (to be updated)
       packet.nt,                    # key (device- or service-type)
@@ -77,7 +92,7 @@ defmodule Ssdp.DeviceDb do
   end
 
   def handle_cast({:delete, _packet}, state) do
-    IO.puts("Deleting from DB")
+    Logger.info("Deleting SSDP packet #{inspect(packet.nt)}")
     {:noreply, state}
   end
 
