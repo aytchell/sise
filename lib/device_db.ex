@@ -61,9 +61,19 @@ defmodule Ssdp.DeviceDb do
       )}
   end
 
-  def handle_cast({:update, _packet}, state) do
-    IO.puts("Updating DB")
-    {:noreply, state}
+  def handle_cast({:update, packet}, state) do
+    {:noreply, Map.update(
+      state,                        # current state (to be updated)
+      packet.nt,                    # key (device- or service-type)
+      %{ packet.usn => packet },    # in case there's no such entry
+      fn old_state -> Map.update(   # if there's already a map for this nt
+        old_state,        # old nt-map (to be updated)
+        packet.usn,       # key (unique id of this device/service)
+        packet,           # in case this usn is not yet present
+                          # otherwise merge them (prefer the new values
+        fn old_packet -> merge_packets(old_packet, packet) end)
+      end
+      )}
   end
 
   def handle_cast({:delete, _packet}, state) do
@@ -74,5 +84,12 @@ defmodule Ssdp.DeviceDb do
   @impl true
   def handle_call(:get, _from, state) do
     {:reply, state, state}
+  end
+
+  defp merge_packets(old_packet, new_packet) do
+    Map.merge(old_packet, new_packet,
+      fn _k, old_val, new_val ->
+        if is_nil(new_val) do old_val else new_val end
+      end)
   end
 end
