@@ -91,9 +91,21 @@ defmodule Ssdp.DeviceDb do
       )}
   end
 
-  def handle_cast({:delete, _packet}, state) do
+  def handle_cast({:delete, packet}, state) do
     Logger.info("Deleting SSDP packet #{inspect(packet.nt)}")
-    {:noreply, state}
+    if is_nil(Map.get(state, packet.nt)) do
+      Logger.debug("Not contained -> not deleting")
+      {:noreply, state}
+    else
+      new_nt = Map.delete(Map.get(state, packet.nt), packet.usn)
+      if map_size(new_nt) == 0 do
+        Logger.debug("Deleting last entry for nt")
+        {:noreply, Map.delete(state, packet.nt)}
+      else
+        Logger.debug("Deleting entry for nt")
+        {:noreply, Map.put(state, packet.nt, new_nt)}
+      end
+    end
   end
 
   @impl true
