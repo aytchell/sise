@@ -1,4 +1,4 @@
-defmodule SsdpClient.SsdpPacket do
+defmodule Ssdp.SsdpPacket do
 
   defmodule Utils do
     def split_http_header(header) do
@@ -12,12 +12,12 @@ defmodule SsdpClient.SsdpPacket do
   end
 
   defmodule Notify do
-    import SsdpClient.SsdpPacket.Utils, only: [split_http_header: 1]
+    import Ssdp.SsdpPacket.Utils, only: [split_http_header: 1]
 
     defstruct [ :type, :location, :nt, :nts, :server, :usn, :host, :cache_control ]
 
     def parse(headers) do
-      parse_accumulate(headers, %SsdpClient.SsdpPacket.Notify{type: :notify})
+      parse_accumulate(headers, %Ssdp.SsdpPacket.Notify{type: :notify})
     end
 
     defp parse_accumulate(headers, packet) do
@@ -42,12 +42,12 @@ defmodule SsdpClient.SsdpPacket do
   end
 
   defmodule MSearch do
-    import SsdpClient.SsdpPacket.Utils, only: [split_http_header: 1]
+    import Ssdp.SsdpPacket.Utils, only: [split_http_header: 1]
 
     defstruct [ :type, :host, :man, :mx, :st, :user_agent, :tcpport, :cpfn, :cpuuid ]
 
     def parse(headers) do
-      parse_accumulate(headers, %SsdpClient.SsdpPacket.MSearch{type: :msearch})
+      parse_accumulate(headers, %Ssdp.SsdpPacket.MSearch{type: :msearch})
     end
 
     defp parse_accumulate(headers, packet) do
@@ -81,9 +81,9 @@ defmodule SsdpClient.SsdpPacket do
       String.split(uhttp_request, ["\r\n", "\n"], trim: true)
     cond do
       request_line == "NOTIFY * HTTP/1.1" ->
-        SsdpClient.SsdpPacket.Notify.parse(headers)
+        Ssdp.SsdpPacket.Notify.parse(headers)
       request_line == "M-SEARCH * HTTP/1.1" ->
-        SsdpClient.SsdpPacket.MSearch.parse(headers)
+        Ssdp.SsdpPacket.MSearch.parse(headers)
     end
   end
 end

@@ -1,6 +1,6 @@
 defmodule Ssdp.MCast.Processor do
 
-  import SsdpClient.SsdpPacket, only: [from_iolist: 1]
+  import Ssdp.SsdpPacket, only: [from_iolist: 1]
 
   def handle_msg(msg) do
     packet = from_iolist(msg)
