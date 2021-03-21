@@ -1,12 +1,21 @@
-defmodule DeviceDb do
+defmodule Ssdp.DeviceDb do
   use GenServer
 
-  def start_link() do
-    GenServer.start_link(__MODULE__, [])
+  def child_spec() do
+    %{
+      id: Ssdp.DeviceDb,
+      name: Ssdp.DeviceDb,
+      start: {Ssdp.DeviceDb, :start_link, []}
+    }
   end
 
-  def add(pid, packet) do
-    GenServer.cast(pid, {:add, packet})
+  def start_link(opts) do
+    GenServer.start_link(__MODULE__, [], opts)
+  end
+
+  def add(packet) do
+    IO.puts("send -> add to DB")
+    GenServer.cast(Ssdp.DeviceDb, {:add, packet})
   end
 
   @impl true
@@ -16,6 +25,7 @@ defmodule DeviceDb do
 
   @impl true
   def handle_cast({:add, packet}, state) do
+    IO.puts("Adding to DB")
     {:noreply, [packet | state]}
   end
 end
