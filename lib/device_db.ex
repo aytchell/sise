@@ -1,4 +1,6 @@
 defmodule Ssdp.DeviceDb do
+# SPDX-License-Identifier: Apache-2.0
+
   use GenServer
   require Logger
 

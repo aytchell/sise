@@ -1,4 +1,5 @@
 defmodule Ssdp.MCast.Listener do
+# SPDX-License-Identifier: Apache-2.0
 
   def child_spec(_arg) do
     %{

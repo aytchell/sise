@@ -1,4 +1,6 @@
 defmodule Ssdp.Supervisor do
+# SPDX-License-Identifier: Apache-2.0
+
   use Supervisor
 
   def start_link(opts) do

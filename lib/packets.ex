@@ -1,4 +1,5 @@
 defmodule Ssdp.SsdpPacket do
+# SPDX-License-Identifier: Apache-2.0
 
   defmodule Utils do
     def split_http_header(header) do

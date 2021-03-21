@@ -1,4 +1,5 @@
 defmodule Ssdp.MCast.Processor do
+# SPDX-License-Identifier: Apache-2.0
 
   import Ssdp.SsdpPacket, only: [from_iolist: 1]
 
