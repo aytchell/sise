@@ -1,25 +1,44 @@
 defmodule Ssdp.Config do
 
+  @twenty_minutes 20 * 60 * 1_000
+
+  @msearch_ttl_default                  2
+  @msearch_find_locals_default          false
+  @msearch_search_target_default        "ssdp:all"
+  @msearch_repeat_interval_msec_default @twenty_minutes
+  @msearch_max_seconds_default          5
+
   # UPnP/SSDP spec says:
   # "The TTL for the IP packet should default to 2 and should be configurable"
   def msearch_ttl() do
-    2
+    case Application.fetch_env(:Ssdp, :msearch_ttl) do
+      {:ok, value} -> value
+      :error -> @msearch_ttl_default
+    end
   end
 
   def msearch_find_locals() do
-    false
+    case Application.fetch_env(:Ssdp, :msearch_find_locals) do
+      {:ok, value} -> value
+      :error -> @msearch_find_locals_default
+    end
   end
 
   def msearch_search_target() do
-    "ssdp:all"
+    case Application.fetch_env(:Ssdp, :msearch_search_target) do
+      {:ok, value} -> value
+      :error -> @msearch_search_target_default
+    end
   end
 
   @doc """
   The number of milliseconds between to M-Search multicasts
   """
   def msearch_repeat_interval_msec() do
-    # 20 minutes
-    20 * 60 * 1_000
+    case Application.fetch_env(:Ssdp, :msearch_repeat_interval_msec) do
+      {:ok, value} -> value
+      :error -> @msearch_repeat_interval_msec_default
+    end
   end
 
   @doc """
@@ -27,6 +46,9 @@ defmodule Ssdp.Config do
   our M-Search request. Should be 1 <= mx <= 5
   """
   def msearch_max_seconds() do
-    5
+    case Application.fetch_env(:Ssdp, :msearch_max_seconds) do
+      {:ok, value} -> value
+      :error -> @msearch_max_seconds_default
+    end
   end
 end
