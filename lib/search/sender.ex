@@ -1,4 +1,4 @@
-defmodule Ssdp.Search.Broadcaster do
+defmodule Ssdp.Search.Sender do
 # SPDX-License-Identifier: Apache-2.0
 
   require Logger
@@ -12,7 +12,7 @@ defmodule Ssdp.Search.Broadcaster do
   def child_spec() do
     %{
       id: __MODULE__,
-      name: Ssdp.Search.Broadcaster,
+      name: Ssdp.Search.Sender,
       start: {__MODULE__, :start_link, []}
     }
   end
