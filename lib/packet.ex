@@ -1,4 +1,4 @@
-defmodule Ssdp.SsdpPacket do
+defmodule Ssdp.Packet do
 # SPDX-License-Identifier: Apache-2.0
 
   defmodule Utils do
@@ -13,12 +13,12 @@ defmodule Ssdp.SsdpPacket do
   end
 
   defmodule Notify do
-    import Ssdp.SsdpPacket.Utils, only: [split_http_header: 1]
+    alias Ssdp.Packet.Utils
 
     defstruct [ :type, :location, :nt, :nts, :server, :usn, :host, :cache_control ]
 
     def parse(headers) do
-      parse_accumulate(headers, %Ssdp.SsdpPacket.Notify{type: :notify})
+      parse_accumulate(headers, %Ssdp.Packet.Notify{type: :notify})
     end
 
     defp parse_accumulate(headers, packet) do
@@ -29,7 +29,7 @@ defmodule Ssdp.SsdpPacket do
     end
 
     defp add_entry(packet, header) do
-      { name, content } = split_http_header(header)
+      { name, content } = Utils.split_http_header(header)
       case name do
         "host" -> %{packet | host: content}
         "cache-control" -> %{packet | cache_control: content}
@@ -54,12 +54,12 @@ defmodule Ssdp.SsdpPacket do
   end
 
   defmodule MSearch do
-    import Ssdp.SsdpPacket.Utils, only: [split_http_header: 1]
+    alias Ssdp.Packet.Utils
 
     defstruct [ :type, :host, :man, :mx, :st, :user_agent, :tcpport, :cpfn, :cpuuid ]
 
     def parse(headers) do
-      parse_accumulate(headers, %Ssdp.SsdpPacket.MSearch{type: :msearch})
+      parse_accumulate(headers, %Ssdp.Packet.MSearch{type: :msearch})
     end
 
     defp parse_accumulate(headers, packet) do
@@ -70,7 +70,7 @@ defmodule Ssdp.SsdpPacket do
     end
 
     defp add_entry(packet, header) do
-      { name, content } = split_http_header(header)
+      { name, content } = Utils.split_http_header(header)
       case name do
         "host" -> %{packet | host: content}
         "man" -> %{packet | man: content}
@@ -93,12 +93,12 @@ defmodule Ssdp.SsdpPacket do
       String.split(uhttp_request, ["\r\n", "\n"], trim: true)
     cond do
       request_line == "NOTIFY * HTTP/1.1" ->
-        Ssdp.SsdpPacket.Notify.parse(headers)
+        Ssdp.Packet.Notify.parse(headers)
       # M-Search responses are treated as if they are NOTIFY messages
       request_line == "HTTP/1.1 200 OK" ->
-        Ssdp.SsdpPacket.Notify.parse(headers)
+        Ssdp.Packet.Notify.parse(headers)
       request_line == "M-SEARCH * HTTP/1.1" ->
-        Ssdp.SsdpPacket.MSearch.parse(headers)
+        Ssdp.Packet.MSearch.parse(headers)
     end
   end
 end
