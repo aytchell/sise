@@ -13,8 +13,8 @@ defmodule Ssdp.MCast.Listener do
   end
 
   defp open_and_listen() do
-    ssdp_mcast = {239, 255, 255, 250}
-    ssdp_port = 1900
+    ssdp_mcast = Ssdp.multicast_addr()
+    ssdp_port = Ssdp.multicast_port()
     any = {0, 0, 0, 0}
     addmem_opt = {:add_membership, {ssdp_mcast, any}}
     {:ok, socket} = :gen_udp.open( ssdp_port, [{:reuseaddr, true}, addmem_opt])

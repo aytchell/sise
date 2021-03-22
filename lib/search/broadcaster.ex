@@ -9,9 +9,6 @@ defmodule Ssdp.Search.Broadcaster do
 
   use GenServer
 
-  @multicast_addr {239, 255, 255, 250}
-  @multicast_port 1900
-
   def child_spec() do
     %{
       id: __MODULE__,
@@ -109,15 +106,18 @@ defmodule Ssdp.Search.Broadcaster do
   end
 
   defp send_msearch_message(socket) do
+    addr = Ssdp.multicast_addr()
+    port = Ssdp.multicast_port()
     message = build_search_msg(
+      addr, port,
       Ssdp.Config.msearch_search_target(),
       Ssdp.Config.msearch_max_seconds())
-    :gen_udp.send(socket, @multicast_addr, @multicast_port, message)
+    :gen_udp.send(socket, addr, port, message)
   end
 
-  defp build_search_msg(search_target, max_seconds) do
+  defp build_search_msg(addr, port, search_target, max_seconds) do
     "M-SEARCH * HTTP/1.1\r\n" <>
-    "Host: #{:inet_parse.ntoa(@multicast_addr)}:#{@multicast_port}\r\n" <>
+    "Host: #{:inet_parse.ntoa(addr)}:#{port}\r\n" <>
     "MAN: \"ssdp:discover\"\r\n" <>
     "ST: #{search_target}\r\n" <>
     "MX: #{max_seconds}\r\n\r\n"
