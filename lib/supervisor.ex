@@ -11,8 +11,8 @@ defmodule Ssdp.Supervisor do
   def init(:ok) do
     children = [
       {Ssdp.DeviceDb, name: Ssdp.DeviceDb},
-      Ssdp.MCast.Supervisor,
-      Ssdp.Search.Supervisor
+      {Ssdp.MCast.Supervisor, name: Ssdp.MCast.Supervisor},
+      {Ssdp.Search.Supervisor, name: Ssdp.Search.Supervisor}
     ]
 
     Supervisor.init(children, strategy: :rest_for_one)

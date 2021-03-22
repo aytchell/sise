@@ -10,7 +10,7 @@ defmodule Ssdp.Search.Supervisor do
   @impl true
   def init(:ok) do
     children = [
-      Ssdp.Search.Broadcaster,
+      {Ssdp.Search.Broadcaster, name: Ssdp.Search.Broadcaster}
     ]
 
     Supervisor.init(children, strategy: :one_for_one)

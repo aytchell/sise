@@ -10,8 +10,9 @@ defmodule Ssdp.MCast.Supervisor do
   @impl true
   def init(:ok) do
     children = [
-      Ssdp.MCast.Listener,
-      {Task.Supervisor, name: Ssdp.MCast.ProcessorSupervisor, strategy: :one_for_one}
+      {Ssdp.MCast.Listener, name: Ssdp.MCast.Supervisor},
+      {Task.Supervisor, name: Ssdp.MCast.ProcessorSupervisor,
+        strategy: :one_for_one}
     ]
 
     Supervisor.init(children, strategy: :one_for_one)
