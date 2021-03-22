@@ -7,14 +7,10 @@ defmodule Ssdp.Search.Broadcaster do
     defstruct [ :socket, :timer_ref, :attempts_left ]
   end
 
-  # Repeat M-SEARCH every 20 minutes
-  @twenty_minutes 20 * 60 * 1000
-
-  # UPnP/SSDP spec says:
-  # "The TTL for the IP packet should default to 2 and should be configurable"
-  @msearch_ttl 2
-
   use GenServer
+
+  @multicast_addr {239, 255, 255, 250}
+  @multicast_port 1900
 
   def child_spec() do
     %{
@@ -87,13 +83,17 @@ defmodule Ssdp.Search.Broadcaster do
 
   # Send some more M-SEARCH messages in case the first message got lost
   defp handle_follow_up_msg(state) do
-    if state.attempts_left == 0 do
-      # We're done. Wait some seconds for answers, then close the socket
-      Process.send_after(self(), :timeout, 6000)
+    send_msearch_message(state.socket)
+
+    if state.attempts_left <= 1 do
+      # This was the last attempt.
+      timeout_msec = (Ssdp.Config.msearch_max_seconds() + 1) * 1000
+      Process.send_after(self(), :timeout, timeout_msec)
+
       {:noreply, %State{state |
-        timer_ref: Process.send_after(self(), :ok, @twenty_minutes)}}
+        timer_ref: Process.send_after(self(), :ok,
+          Ssdp.Config.msearch_repeat_interval_msec())}}
     else
-      send_msearch_message(state.socket)
       {:noreply, %State{socket: state.socket,
         attempts_left: state.attempts_left - 1,
         timer_ref: Process.send_after(self(), :ok, 1000)}}
@@ -101,20 +101,26 @@ defmodule Ssdp.Search.Broadcaster do
   end
 
   defp open_unicast_socket() do
-    :gen_udp.open(0, [{:reuseaddr, true}, {:multicast_ttl, @msearch_ttl}])
+    :gen_udp.open(0, [
+      {:reuseaddr, true},
+      {:multicast_ttl, Ssdp.Config.msearch_ttl()},
+      {:multicast_loop, Ssdp.Config.msearch_find_locals()}
+    ])
   end
 
   defp send_msearch_message(socket) do
-    message = build_search_msg("ssdp:all")
-    :gen_udp.send(socket, {239, 255, 255, 250}, 1900, message)
+    message = build_search_msg(
+      Ssdp.Config.msearch_search_target(),
+      Ssdp.Config.msearch_max_seconds())
+    :gen_udp.send(socket, @multicast_addr, @multicast_port, message)
   end
 
-  defp build_search_msg(search_target) do
+  defp build_search_msg(search_target, max_seconds) do
     "M-SEARCH * HTTP/1.1\r\n" <>
-      "Host: 239.255.255.250:1900\r\n" <>
-        "MAN: \"ssdp:discover\"\r\n" <>
-          "ST: #{search_target}\r\n" <>
-            "MX: 5\r\n\r\n"
+    "Host: #{:inet_parse.ntoa(@multicast_addr)}:#{@multicast_port}\r\n" <>
+    "MAN: \"ssdp:discover\"\r\n" <>
+    "ST: #{search_target}\r\n" <>
+    "MX: #{max_seconds}\r\n\r\n"
   end
 
   def close_socket(state) do
