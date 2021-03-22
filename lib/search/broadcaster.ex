@@ -26,7 +26,6 @@ defmodule Ssdp.Search.Broadcaster do
 
   def start_link(opts) do
     {:ok, pid} = GenServer.start_link(__MODULE__, %State{}, opts)
-    Logger.debug("Started M-SEARCH broadcaster")
     GenServer.cast(pid, :ok)
     {:ok, pid}
   end
@@ -43,23 +42,20 @@ defmodule Ssdp.Search.Broadcaster do
   @impl true
   def handle_cast(:ok, state) do
     if is_nil(state.socket) do
-      Logger.debug("sending first M-SEARCH msg")
+      Logger.info("Sending out M-Search messages")
       handle_first_msg()
     else
-      Logger.debug("sending follow-up M-SEARCH msg")
       handle_follow_up_msg(state)
     end
   end
 
   @impl true
   def handle_info(:ok, state) do
-    Logger.debug("handle_info")
     GenServer.cast(self(), :ok)
     {:noreply, %State{state | timer_ref: nil}}
   end
 
   def handle_info({:udp, _socket, _host, _port, msg}, state) do
-    Logger.info("Received M-Search response")
     {:ok, _pid} = Task.Supervisor.start_child(
       Ssdp.Search.ProcessorSupervisor,
       fn() -> Ssdp.Search.Processor.handle_msg(msg) end)
@@ -67,7 +63,7 @@ defmodule Ssdp.Search.Broadcaster do
   end
 
   def handle_info(:timeout, state) do
-    Logger.debug("timeout -> closing socket")
+    Logger.info("Finished M-Search. Going to sleep")
     close_socket(state)
     {:noreply, %State{state | socket: nil}}
   end
