@@ -1,4 +1,4 @@
-defmodule Ssdp.Supervisor do
+defmodule Ssdp.Search.Supervisor do
 # SPDX-License-Identifier: Apache-2.0
 
   use Supervisor
@@ -10,11 +10,9 @@ defmodule Ssdp.Supervisor do
   @impl true
   def init(:ok) do
     children = [
-      {Ssdp.DeviceDb, name: Ssdp.DeviceDb},
-      Ssdp.MCast.Supervisor,
-      Ssdp.Search.Supervisor
+      Ssdp.Search.Broadcaster,
     ]
 
-    Supervisor.init(children, strategy: :rest_for_one)
+    Supervisor.init(children, strategy: :one_for_one)
   end
 end
