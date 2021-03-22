@@ -7,7 +7,12 @@ defmodule Ssdp.Search.Broadcaster do
     defstruct [ :socket, :timer_ref, :attempts_left ]
   end
 
+  # Repeat M-SEARCH every 20 minutes
   @twenty_minutes 20 * 60 * 1000
+
+  # UPnP/SSDP spec says:
+  # "The TTL for the IP packet should default to 2 and should be configurable"
+  @msearch_ttl 2
 
   use GenServer
 
@@ -89,7 +94,7 @@ defmodule Ssdp.Search.Broadcaster do
   end
 
   defp open_unicast_socket() do
-    :gen_udp.open(0, [{:reuseaddr, true}])
+    :gen_udp.open(0, [{:reuseaddr, true}, {:multicast_ttl, @msearch_ttl}])
   end
 
   defp send_msearch_message(socket) do
