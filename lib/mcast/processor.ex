@@ -21,6 +21,7 @@ defmodule Ssdp.MCast.Processor do
   end
 
   def handle_msearch(_packet) do
+    # Answering to M-SEARCH is not supported
     IO.puts("msearch")
   end
 end

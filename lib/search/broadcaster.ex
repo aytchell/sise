@@ -16,6 +16,14 @@ defmodule Ssdp.Search.Broadcaster do
 
   use GenServer
 
+  def child_spec() do
+    %{
+      id: __MODULE__,
+      name: Ssdp.Search.Broadcaster,
+      start: {__MODULE__, :start_link, []}
+    }
+  end
+
   def start_link(opts) do
     {:ok, pid} = GenServer.start_link(__MODULE__, %State{}, opts)
     Logger.debug("Started M-SEARCH broadcaster")
@@ -50,8 +58,11 @@ defmodule Ssdp.Search.Broadcaster do
     {:noreply, %State{state | timer_ref: nil}}
   end
 
-  def handle_info({:udp, _socket, _host, _port, _msg}, state) do
-    Logger.debug("received M-SEARCH answer")
+  def handle_info({:udp, _socket, _host, _port, msg}, state) do
+    Logger.info("Received M-Search response")
+    {:ok, _pid} = Task.Supervisor.start_child(
+      Ssdp.Search.ProcessorSupervisor,
+      fn() -> Ssdp.Search.Processor.handle_msg(msg) end)
     {:noreply, state}
   end
 

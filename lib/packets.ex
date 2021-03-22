@@ -38,6 +38,17 @@ defmodule Ssdp.SsdpPacket do
         "nts" -> %{packet | nts: content}
         "server" -> %{packet | server: content}
         "usn" -> %{packet | usn: content}
+
+        # Fields contained in M-Search responses:
+
+        # 'st' is basically the same as 'nt' in Notify messages
+        "st" -> %{packet | nt: content}
+        # Contained for backwards compatibility: ignored
+        "ext" -> packet
+        # date when response was generated: ignored
+        "date" -> packet
+        # even if there's a body we'd ignore it
+        "content-length" -> packet
       end
     end
   end
@@ -82,6 +93,9 @@ defmodule Ssdp.SsdpPacket do
       String.split(uhttp_request, ["\r\n", "\n"], trim: true)
     cond do
       request_line == "NOTIFY * HTTP/1.1" ->
+        Ssdp.SsdpPacket.Notify.parse(headers)
+      # M-Search responses are treated as if they are NOTIFY messages
+      request_line == "HTTP/1.1 200 OK" ->
         Ssdp.SsdpPacket.Notify.parse(headers)
       request_line == "M-SEARCH * HTTP/1.1" ->
         Ssdp.SsdpPacket.MSearch.parse(headers)
