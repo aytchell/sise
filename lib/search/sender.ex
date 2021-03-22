@@ -61,11 +61,13 @@ defmodule Ssdp.Search.Sender do
     {:noreply, %State{state | socket: nil}}
   end
 
+  def handle_info(_msg, state) do
+    {:noreply, state}
+  end
+
   @impl true
   def terminate(_reason, state) do
-    unless is_nil(state.timer_ref) do
-      Process.cancel_timer(state.timer_ref)
-    end
+    cancel_timer(state)
     close_socket(state)
     # the return value is ignored
   end
@@ -123,7 +125,13 @@ defmodule Ssdp.Search.Sender do
     "MX: #{max_seconds}\r\n\r\n"
   end
 
-  def close_socket(state) do
+  defp cancel_timer(state) do
+    unless is_nil(state.timer_ref) do
+      Process.cancel_timer(state.timer_ref)
+    end
+  end
+
+  defp close_socket(state) do
     unless is_nil(state.socket) do
       :gen_udp.close(state.socket)
     end
