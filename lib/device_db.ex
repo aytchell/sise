@@ -21,38 +21,28 @@ defmodule Ssdp.DeviceDb do
   end
 
   def add(packet) do
-    if Map.has_key?(packet, :nt) do
-      if Map.has_key?(packet, :usn) do
-        GenServer.cast(Ssdp.DeviceDb, {:add, packet})
-      else
-        Logger.warn("Won't add SSDP packet since it's missing 'USN'")
-      end
-    else
-      Logger.warn("Won't add SSDP packet since it's missing 'NT'")
-    end
+    cast_if_nt_and_usn(packet, :add)
   end
 
   def update(packet) do
-    if Map.has_key?(packet, :nt) do
-      if Map.has_key?(packet, :usn) do
-        GenServer.cast(Ssdp.DeviceDb, {:update, packet})
-      else
-        Logger.warn("Won't update SSDP packet since it's missing 'USN'")
-      end
-    else
-      Logger.warn("Won't update SSDP packet since it's missing 'NT'")
-    end
+    cast_if_nt_and_usn(packet, :update)
   end
 
   def delete(packet) do
+    cast_if_nt_and_usn(packet, :delete)
+  end
+
+  defp cast_if_nt_and_usn(packet, command) do
     if Map.has_key?(packet, :nt) do
       if Map.has_key?(packet, :usn) do
-        GenServer.cast(Ssdp.DeviceDb, {:delete, packet})
+        GenServer.cast(Ssdp.DeviceDb, {command, packet})
       else
-        Logger.warn("Won't delete SSDP packet since it's missing 'USN'")
+        cmd = Atom.to_string(command)
+        Logger.warn("Won't #{cmd} SSDP packet since it's missing 'USN'")
       end
     else
-      Logger.warn("Won't delete SSDP packet since it's missing 'NT'")
+      cmd = Atom.to_string(command)
+      Logger.warn("Won't #{cmd} SSDP packet since it's missing 'NT'")
     end
   end
 
