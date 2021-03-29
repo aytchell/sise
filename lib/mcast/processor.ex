@@ -12,9 +12,9 @@ defmodule Ssdp.MCast.Processor do
 
   def handle_notify(packet) do
     case packet.nts do
-      "ssdp:alive" -> Ssdp.DeviceDb.add(packet)
-      "ssdp:update" -> Ssdp.DeviceDb.update(packet)
-      "ssdp:byebye" -> Ssdp.DeviceDb.delete(packet)
+      "ssdp:alive" -> Ssdp.Cache.DeviceDb.add(packet)
+      "ssdp:update" -> Ssdp.Cache.DeviceDb.update(packet)
+      "ssdp:byebye" -> Ssdp.Cache.DeviceDb.delete(packet)
     end
   end
 

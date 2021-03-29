@@ -3,6 +3,6 @@ defmodule Ssdp.Search.Processor do
 
   def handle_msg(msg) do
     packet = Ssdp.Packet.from_iolist(msg)
-    Ssdp.DeviceDb.add(packet)
+    Ssdp.Cache.DeviceDb.add(packet)
   end
 end

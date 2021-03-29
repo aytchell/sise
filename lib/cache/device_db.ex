@@ -1,4 +1,4 @@
-defmodule Ssdp.DeviceDb do
+defmodule Ssdp.Cache.DeviceDb do
 # SPDX-License-Identifier: Apache-2.0
 
   use GenServer
@@ -6,9 +6,9 @@ defmodule Ssdp.DeviceDb do
 
   def child_spec() do
     %{
-      id: Ssdp.DeviceDb,
-      name: Ssdp.DeviceDb,
-      start: {Ssdp.DeviceDb, :start_link, %{}}
+      id: Ssdp.Cache.DeviceDb,
+      name: Ssdp.Cache.DeviceDb,
+      start: {Ssdp.Cache.DeviceDb, :start_link, %{}}
     }
   end
 
@@ -26,15 +26,19 @@ defmodule Ssdp.DeviceDb do
   end
 
   def start_link(opts) do
-    GenServer.start_link(__MODULE__, Ssdp.DeviceDb.State.empty(), opts)
+    GenServer.start_link(__MODULE__, Ssdp.Cache.DeviceDb.State.empty(), opts)
   end
 
   def get_all() do
-    GenServer.call(Ssdp.DeviceDb, :get)
+    GenServer.call(Ssdp.Cache.DeviceDb, :get)
   end
 
   def subscribe(notification_type) do
-    GenServer.cast(Ssdp.DeviceDb, {:subscribe, self(), notification_type})
+    GenServer.cast(Ssdp.Cache.DeviceDb, {:subscribe, self(), notification_type})
+  end
+
+  def unsubscribe(notification_type) do
+    GenServer.cast(Ssdp.Cache.DeviceDb, {:unsubscribe, self(), notification_type})
   end
 
   def add(packet) do
@@ -52,7 +56,7 @@ defmodule Ssdp.DeviceDb do
   defp cast_if_nt_and_usn(packet, command) do
     if Map.has_key?(packet, :nt) do
       if Map.has_key?(packet, :usn) do
-        GenServer.cast(Ssdp.DeviceDb, {command, packet})
+        GenServer.cast(Ssdp.Cache.DeviceDb, {command, packet})
       else
         cmd = Atom.to_string(command)
         Logger.warn("Won't #{cmd} SSDP packet since it's missing 'USN'")
@@ -95,6 +99,15 @@ defmodule Ssdp.DeviceDb do
     {:noreply, state}
   end
 
+  def handle_cast({:unsubscribe, _pid, _notification_type}, state) do
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_call(:get, _from, state) do
+    {:reply, state.entries, state}
+  end
+
   defp add_packet(current_packets, new_packet) do
     Map.update(
       current_packets,                    # current state (to be updated)
@@ -131,11 +144,6 @@ defmodule Ssdp.DeviceDb do
     else
       Map.put(current_packets, old_packet.nt, new_nt)
     end
-  end
-
-  @impl true
-  def handle_call(:get, _from, state) do
-    {:reply, state.entries, state}
   end
 
   defp merge_packets(old_packet, new_packet) do
