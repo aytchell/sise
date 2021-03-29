@@ -33,14 +33,6 @@ defmodule Ssdp.Cache.DeviceDb do
     GenServer.call(Ssdp.Cache.DeviceDb, :get)
   end
 
-  def subscribe(notification_type) do
-    GenServer.cast(Ssdp.Cache.DeviceDb, {:subscribe, self(), notification_type})
-  end
-
-  def unsubscribe(notification_type) do
-    GenServer.cast(Ssdp.Cache.DeviceDb, {:unsubscribe, self(), notification_type})
-  end
-
   def add(packet) do
     cast_if_nt_and_usn(packet, :add)
   end
@@ -76,12 +68,14 @@ defmodule Ssdp.Cache.DeviceDb do
   def handle_cast({:add, packet}, state) do
     Logger.info("Adding SSDP packet #{inspect(packet.nt)}")
     new_entries = add_packet(state.entries, packet)
+    Ssdp.Cache.Notifier.notify_add(packet)
     {:noreply, State.build(new_entries, state.listeners)}
   end
 
   def handle_cast({:update, packet}, state) do
     Logger.info("Updating SSDP packet #{inspect(packet.nt)}")
     new_entries = update_packet(state.entries, packet)
+    Ssdp.Cache.Notifier.notify_update(packet)
     {:noreply, State.build(new_entries, state.listeners)}
   end
 
@@ -90,17 +84,10 @@ defmodule Ssdp.Cache.DeviceDb do
       {:noreply, state}
     else
       Logger.info("Deleting SSDP packet #{inspect(packet.nt)}")
+      Ssdp.Cache.Notifier.notify_delete(packet)
       new_entries = delete_packet(state.entries, packet)
       {:noreply, State.build(new_entries, state.listeners)}
     end
-  end
-
-  def handle_cast({:subscribe, _pid, _notification_type}, state) do
-    {:noreply, state}
-  end
-
-  def handle_cast({:unsubscribe, _pid, _notification_type}, state) do
-    {:noreply, state}
   end
 
   @impl true

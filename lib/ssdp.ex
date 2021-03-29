@@ -13,11 +13,19 @@ defmodule Ssdp do
   end
 
   def subscribe(notification_type) do
-    Ssdp.Cache.DeviceDb.subscribe(notification_type)
+    Ssdp.Cache.Notifier.subscribe(notification_type)
+  end
+
+  def subscribe_all() do
+    Ssdp.Cache.Notifier.subscribe_all()
   end
 
   def unsubscribe(notification_type) do
-    Ssdp.Cache.DeviceDb.unsubscribe(notification_type)
+    Ssdp.Cache.Notifier.unsubscribe(notification_type)
+  end
+
+  def unsubscribe_all() do
+    Ssdp.Cache.Notifier.unsubscribe_all()
   end
 
   def multicast_addr() do

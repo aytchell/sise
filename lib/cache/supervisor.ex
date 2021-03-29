@@ -10,7 +10,8 @@ defmodule Ssdp.Cache.Supervisor do
   @impl true
   def init(:ok) do
     children = [
-      {Ssdp.Cache.DeviceDb, name: Ssdp.Cache.DeviceDb}
+      {Ssdp.Cache.DeviceDb, name: Ssdp.Cache.DeviceDb},
+      {Ssdp.Cache.Notifier, name: Ssdp.Cache.Notifier}
     ]
 
     Supervisor.init(children, strategy: :rest_for_one)
