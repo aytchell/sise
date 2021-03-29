@@ -12,12 +12,29 @@ defmodule Ssdp.DeviceDb do
     }
   end
 
+  defmodule State do
+    @enforce_keys [:entries, :listeners]
+    defstruct [:entries, :listeners]
+
+    def empty() do
+      %State{entries: %{}, listeners: []}
+    end
+
+    def build(entries, listeners) do
+      %State{entries: entries, listeners: listeners}
+    end
+  end
+
   def start_link(opts) do
-    GenServer.start_link(__MODULE__, %{}, opts)
+    GenServer.start_link(__MODULE__, Ssdp.DeviceDb.State.empty(), opts)
   end
 
   def get_all() do
     GenServer.call(Ssdp.DeviceDb, :get)
+  end
+
+  def subscribe(notification_type) do
+    GenServer.cast(Ssdp.DeviceDb, {:subscribe, self(), notification_type})
   end
 
   def add(packet) do
@@ -54,33 +71,14 @@ defmodule Ssdp.DeviceDb do
   @impl true
   def handle_cast({:add, packet}, state) do
     Logger.info("Adding SSDP packet #{inspect(packet.nt)}")
-    {:noreply, Map.update(
-      state,                        # current state (to be updated)
-      packet.nt,                    # key (device- or service-type)
-      %{ packet.usn => packet },    # in case there's no such entry
-      fn old_state -> Map.update(   # if there's already a map for this nt
-        old_state,        # old nt-map (to be updated)
-        packet.usn,       # key (unique id of this device/service)
-        packet,           # in case this usn is not yet present
-        fn _old_packet -> packet end) # otherwise we simply replace it
-      end
-      )}
+    new_entries = add_packet(state.entries, packet)
+    {:noreply, State.build(new_entries, state.listeners)}
   end
 
   def handle_cast({:update, packet}, state) do
     Logger.info("Updating SSDP packet #{inspect(packet.nt)}")
-    {:noreply, Map.update(
-      state,                        # current state (to be updated)
-      packet.nt,                    # key (device- or service-type)
-      %{ packet.usn => packet },    # in case there's no such entry
-      fn old_state -> Map.update(   # if there's already a map for this nt
-        old_state,        # old nt-map (to be updated)
-        packet.usn,       # key (unique id of this device/service)
-        packet,           # in case this usn is not yet present
-                          # otherwise merge them (prefer the new values
-        fn old_packet -> merge_packets(old_packet, packet) end)
-      end
-      )}
+    new_entries = update_packet(state.entries, packet)
+    {:noreply, State.build(new_entries, state.listeners)}
   end
 
   def handle_cast({:delete, packet}, state) do
@@ -88,18 +86,56 @@ defmodule Ssdp.DeviceDb do
       {:noreply, state}
     else
       Logger.info("Deleting SSDP packet #{inspect(packet.nt)}")
-      new_nt = Map.delete(Map.get(state, packet.nt), packet.usn)
-      if map_size(new_nt) == 0 do
-        {:noreply, Map.delete(state, packet.nt)}
-      else
-        {:noreply, Map.put(state, packet.nt, new_nt)}
+      new_entries = delete_packet(state.entries, packet)
+      {:noreply, State.build(new_entries, state.listeners)}
+    end
+  end
+
+  def handle_cast({:subscribe, _pid, _notification_type}, state) do
+    {:noreply, state}
+  end
+
+  defp add_packet(current_packets, new_packet) do
+    Map.update(
+      current_packets,                    # current state (to be updated)
+      new_packet.nt,                      # key (device- or service-type)
+      %{ new_packet.usn => new_packet },  # in case there's no such entry
+      fn old_state -> Map.update(   # if there's already a map for this nt
+        old_state,        # old nt-map (to be updated)
+        new_packet.usn,   # key (unique id of this device/service)
+        new_packet,       # in case this usn is not yet present
+        fn _old_packet -> new_packet end) # otherwise we simply replace it
       end
+    )
+  end
+
+  defp update_packet(current_packets, new_packet) do
+    Map.update(
+      current_packets,                    # current state (to be updated)
+      new_packet.nt,                      # key (device- or service-type)
+      %{ new_packet.usn => new_packet },  # in case there's no such entry
+      fn old_state -> Map.update(   # if there's already a map for this nt
+        old_state,        # old nt-map (to be updated)
+        new_packet.usn,   # key (unique id of this device/service)
+        new_packet,       # in case this usn is not yet present
+                          # otherwise merge them (prefer the new values
+        fn old_packet -> merge_packets(old_packet, new_packet) end)
+      end
+    )
+  end
+
+  defp delete_packet(current_packets, old_packet) do
+    new_nt = Map.delete(Map.get(current_packets, old_packet.nt), old_packet.usn)
+    if map_size(new_nt) == 0 do
+      Map.delete(current_packets, old_packet.nt)
+    else
+      Map.put(current_packets, old_packet.nt, new_nt)
     end
   end
 
   @impl true
   def handle_call(:get, _from, state) do
-    {:reply, state, state}
+    {:reply, state.entries, state}
   end
 
   defp merge_packets(old_packet, new_packet) do
