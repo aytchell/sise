@@ -8,6 +8,10 @@ defmodule Ssdp do
     Ssdp.Supervisor.start_link(name: Ssdp.Supervisor)
   end
 
+  def get_all() do
+    Ssdp.DeviceDb.get_all()
+  end
+
   def subscribe(notification_type) do
     Ssdp.DeviceDb.subscribe(notification_type)
   end
