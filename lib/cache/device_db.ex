@@ -66,16 +66,12 @@ defmodule Ssdp.Cache.DeviceDb do
 
   @impl true
   def handle_cast({:add, packet}, state) do
-    Logger.info("Adding SSDP packet #{inspect(packet.nt)}")
-    new_entries = add_packet(state.entries, packet)
-    Ssdp.Cache.Notifier.notify_add(packet)
+    new_entries = add_or_update_packet(state.entries, packet)
     {:noreply, State.build(new_entries, state.listeners)}
   end
 
   def handle_cast({:update, packet}, state) do
-    Logger.info("Updating SSDP packet #{inspect(packet.nt)}")
-    new_entries = update_packet(state.entries, packet)
-    Ssdp.Cache.Notifier.notify_update(packet)
+    new_entries = add_or_update_packet(state.entries, packet)
     {:noreply, State.build(new_entries, state.listeners)}
   end
 
@@ -95,33 +91,85 @@ defmodule Ssdp.Cache.DeviceDb do
     {:reply, state.entries, state}
   end
 
-  defp add_packet(current_packets, new_packet) do
-    Map.update(
-      current_packets,                    # current state (to be updated)
-      new_packet.nt,                      # key (device- or service-type)
-      %{ new_packet.usn => new_packet },  # in case there's no such entry
-      fn old_state -> Map.update(   # if there's already a map for this nt
-        old_state,        # old nt-map (to be updated)
-        new_packet.usn,   # key (unique id of this device/service)
-        new_packet,       # in case this usn is not yet present
-        fn _old_packet -> new_packet end) # otherwise we simply replace it
+  defp add_or_update_packet(current_packets, new_packet) do
+    nt_map = Map.get(current_packets, new_packet.nt)
+    if is_nil(nt_map) do
+      Logger.info("Added first entry for #{new_packet.nt}")
+      Ssdp.Cache.Notifier.notify_add(new_packet)
+      Map.put(current_packets, new_packet.nt,
+        %{ new_packet.usn => new_packet })
+    else
+      if is_nil(Map.get(nt_map, new_packet.usn)) do
+        Logger.info("Added new entry for #{new_packet.nt}")
+        Ssdp.Cache.Notifier.notify_add(new_packet)
+        Map.update!(current_packets, new_packet.nt,
+          fn m -> Map.put(m, new_packet.usn, new_packet) end)
+      else
+        Logger.info("Updating entry for #{new_packet.nt}:#{new_packet.usn}")
+        Map.update!(current_packets, new_packet.nt,
+          fn m -> Map.update!(m, new_packet.usn,
+            fn old -> update_entry(old, new_packet) end)
+          end)
       end
-    )
+    end
   end
 
-  defp update_packet(current_packets, new_packet) do
-    Map.update(
-      current_packets,                    # current state (to be updated)
-      new_packet.nt,                      # key (device- or service-type)
-      %{ new_packet.usn => new_packet },  # in case there's no such entry
-      fn old_state -> Map.update(   # if there's already a map for this nt
-        old_state,        # old nt-map (to be updated)
-        new_packet.usn,   # key (unique id of this device/service)
-        new_packet,       # in case this usn is not yet present
-                          # otherwise merge them (prefer the new values
-        fn old_packet -> merge_packets(old_packet, new_packet) end)
+  # Old and new packet have the same nt and same usn
+  # check for differences, trigger notify and return new entry
+  defp update_entry(old, new) do
+    diff = Ssdp.Packet.diff(old, new)
+    cond do
+      is_empty(diff) -> old
+      Ssdp.Packet.contains_location(diff) -> take_preferred(old, new)
+      true ->
+        Ssdp.Cache.Notifier.notify_update(new)
+        new
+    end
+  end
+
+  defp take_preferred(old_packet, new_packet) do
+    old_is_local = Ssdp.Packet.is_localhost(old_packet)
+    new_is_local = Ssdp.Packet.is_localhost(new_packet)
+    merged = merge_packets(old_packet, new_packet)
+
+    if Ssdp.Config.detect_prefers_localhost() do
+      if old_is_local do
+        if new_is_local do
+          # both are localhost (preferred)
+          Ssdp.Cache.Notifier.notify_update(merged)
+          merged
+        else
+          # old is localhost (preferred); new isn't
+          old_packet
+        end
+      else
+        # old is not localhost (which would be preferred)
+        Ssdp.Cache.Notifier.notify_update(merged)
+        merged
       end
-    )
+    else
+      if old_is_local do
+        # old is localhost (not preferred)
+        Ssdp.Cache.Notifier.notify_update(merged)
+        merged
+      else
+        if new_is_local do
+          # new is localhost and old isn't (which is preferred)
+          old_packet
+        else
+          # both are not localhost (preferred)
+          Ssdp.Cache.Notifier.notify_update(merged)
+          merged
+        end
+      end
+    end
+  end
+
+  defp is_empty(list) do
+    case list do
+      [] -> true
+      _ -> false
+    end
   end
 
   defp delete_packet(current_packets, old_packet) do
