@@ -130,7 +130,7 @@ defmodule Ssdp.Cache.DeviceDb do
   defp take_preferred(old_packet, new_packet) do
     old_is_local = Ssdp.Packet.is_localhost(old_packet)
     new_is_local = Ssdp.Packet.is_localhost(new_packet)
-    merged = merge_packets(old_packet, new_packet)
+    merged = Ssdp.Packet.merge_packets(old_packet, new_packet)
 
     if Ssdp.Config.detect_prefers_localhost() do
       if old_is_local do
@@ -179,12 +179,5 @@ defmodule Ssdp.Cache.DeviceDb do
     else
       Map.put(current_packets, old_packet.nt, new_nt)
     end
-  end
-
-  defp merge_packets(old_packet, new_packet) do
-    Map.merge(old_packet, new_packet,
-      fn _k, old_val, new_val ->
-        if is_nil(new_val) do old_val else new_val end
-      end)
   end
 end
