@@ -12,21 +12,8 @@ defmodule Ssdp.Cache.DeviceDb do
     }
   end
 
-  defmodule State do
-    @enforce_keys [:entries, :listeners]
-    defstruct [:entries, :listeners]
-
-    def empty() do
-      %State{entries: %{}, listeners: []}
-    end
-
-    def build(entries, listeners) do
-      %State{entries: entries, listeners: listeners}
-    end
-  end
-
   def start_link(opts) do
-    GenServer.start_link(__MODULE__, Ssdp.Cache.DeviceDb.State.empty(), opts)
+    GenServer.start_link(__MODULE__, %{}, opts)
   end
 
   def get_all() do
@@ -68,45 +55,45 @@ defmodule Ssdp.Cache.DeviceDb do
   end
 
   @impl true
-  def init(state) do
-    {:ok, state}
+  def init(entries) do
+    {:ok, entries}
   end
 
   @impl true
-  def handle_cast({:add, packet}, state) do
-    new_entries = add_or_update_packet(state.entries, packet)
-    {:noreply, State.build(new_entries, state.listeners)}
+  def handle_cast({:add, packet}, entries) do
+    new_entries = add_or_update_packet(entries, packet)
+    {:noreply, new_entries}
   end
 
-  def handle_cast({:update, packet}, state) do
-    new_entries = add_or_update_packet(state.entries, packet)
-    {:noreply, State.build(new_entries, state.listeners)}
+  def handle_cast({:update, packet}, entries) do
+    new_entries = add_or_update_packet(entries, packet)
+    {:noreply, new_entries}
   end
 
-  def handle_cast({:delete, packet}, state) do
-    if is_nil(Map.get(state, packet.nt)) do
-      {:noreply, state}
+  def handle_cast({:delete, packet}, entries) do
+    if is_nil(Map.get(entries, packet.nt)) do
+      {:noreply, entries}
     else
       Logger.info("Deleting SSDP packet #{inspect(packet.nt)}")
       Ssdp.Cache.Notifier.notify_delete(packet)
-      new_entries = delete_packet(state.entries, packet)
-      {:noreply, State.build(new_entries, state.listeners)}
+      new_entries = delete_packet(entries, packet)
+      {:noreply, new_entries}
     end
   end
 
-  def handle_cast({:sub, pid, notification_type}, state) do
-    Ssdp.Cache.Notifier.subscribe(pid, notification_type, state.entries)
-    {:noreply, state}
+  def handle_cast({:sub, pid, notification_type}, entries) do
+    Ssdp.Cache.Notifier.subscribe(pid, notification_type, entries)
+    {:noreply, entries}
   end
 
-  def handle_cast({:unsub, pid, notification_type}, state) do
+  def handle_cast({:unsub, pid, notification_type}, entries) do
     Ssdp.Cache.Notifier.unsubscribe(pid, notification_type)
-    {:noreply, state}
+    {:noreply, entries}
   end
 
   @impl true
-  def handle_call(:get, _from, state) do
-    {:reply, state.entries, state}
+  def handle_call(:get, _from, entries) do
+    {:reply, entries, entries}
   end
 
   defp add_or_update_packet(current_packets, new_packet) do
