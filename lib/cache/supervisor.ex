@@ -1,5 +1,5 @@
 defmodule Ssdp.Cache.Supervisor do
-# SPDX-License-Identifier: Apache-2.0
+  # SPDX-License-Identifier: Apache-2.0
 
   use Supervisor
 

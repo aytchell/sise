@@ -1,5 +1,5 @@
 defmodule Ssdp.Search.Supervisor do
-# SPDX-License-Identifier: Apache-2.0
+  # SPDX-License-Identifier: Apache-2.0
 
   use Supervisor
 
@@ -11,8 +11,7 @@ defmodule Ssdp.Search.Supervisor do
   def init(:ok) do
     children = [
       {Ssdp.Search.Sender, name: Ssdp.Search.Sender},
-      {Task.Supervisor, name: Ssdp.Search.ProcessorSupervisor,
-        strategy: :one_for_one}
+      {Task.Supervisor, name: Ssdp.Search.ProcessorSupervisor, strategy: :one_for_one}
     ]
 
     Supervisor.init(children, strategy: :one_for_one)

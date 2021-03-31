@@ -1,5 +1,5 @@
 defmodule Ssdp.Cache.Notifier do
-# SPDX-License-Identifier: Apache-2.0
+  # SPDX-License-Identifier: Apache-2.0
 
   use GenServer
   require Logger
@@ -102,10 +102,14 @@ defmodule Ssdp.Cache.Notifier do
 
   defp delete_observer(observer_list, pid, type, acc) do
     case observer_list do
-      [] -> acc
+      [] ->
+        acc
+
       [head | tail] ->
         cond do
-          head.pid != pid -> delete_observer(tail, pid, type, [head | acc])
+          head.pid != pid ->
+            delete_observer(tail, pid, type, [head | acc])
+
           true ->
             if type == "all" || type == head.type do
               Process.demonitor(head.monitor_ref)

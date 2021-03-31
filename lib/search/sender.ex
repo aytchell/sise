@@ -1,10 +1,10 @@
 defmodule Ssdp.Search.Sender do
-# SPDX-License-Identifier: Apache-2.0
+  # SPDX-License-Identifier: Apache-2.0
 
   require Logger
 
   defmodule State do
-    defstruct [ :socket, :timer_ref, :attempts_left ]
+    defstruct [:socket, :timer_ref, :attempts_left]
   end
 
   use GenServer
@@ -49,9 +49,12 @@ defmodule Ssdp.Search.Sender do
   end
 
   def handle_info({:udp, _socket, _host, _port, msg}, state) do
-    {:ok, _pid} = Task.Supervisor.start_child(
-      Ssdp.Search.ProcessorSupervisor,
-      fn() -> Ssdp.Search.Processor.handle_msg(msg) end)
+    {:ok, _pid} =
+      Task.Supervisor.start_child(
+        Ssdp.Search.ProcessorSupervisor,
+        fn -> Ssdp.Search.Processor.handle_msg(msg) end
+      )
+
     {:noreply, state}
   end
 
@@ -76,8 +79,9 @@ defmodule Ssdp.Search.Sender do
   defp handle_first_msg() do
     {:ok, socket} = open_unicast_socket()
     send_msearch_message(socket)
-    {:noreply, %State{socket: socket, attempts_left: 2,
-      timer_ref: Process.send_after(self(), :ok, 1000)}}
+
+    {:noreply,
+     %State{socket: socket, attempts_left: 2, timer_ref: Process.send_after(self(), :ok, 1000)}}
   end
 
   # Send some more M-SEARCH messages in case the first message got lost
@@ -89,13 +93,18 @@ defmodule Ssdp.Search.Sender do
       timeout_msec = (Ssdp.Config.msearch_max_seconds() + 1) * 1000
       Process.send_after(self(), :timeout, timeout_msec)
 
-      {:noreply, %State{state |
-        timer_ref: Process.send_after(self(), :ok,
-          Ssdp.Config.msearch_repeat_interval_msec())}}
+      {:noreply,
+       %State{
+         state
+         | timer_ref: Process.send_after(self(), :ok, Ssdp.Config.msearch_repeat_interval_msec())
+       }}
     else
-      {:noreply, %State{socket: state.socket,
-        attempts_left: state.attempts_left - 1,
-        timer_ref: Process.send_after(self(), :ok, 1000)}}
+      {:noreply,
+       %State{
+         socket: state.socket,
+         attempts_left: state.attempts_left - 1,
+         timer_ref: Process.send_after(self(), :ok, 1000)
+       }}
     end
   end
 
@@ -110,19 +119,24 @@ defmodule Ssdp.Search.Sender do
   defp send_msearch_message(socket) do
     addr = Ssdp.Config.multicast_addr()
     port = Ssdp.Config.multicast_port()
-    message = build_search_msg(
-      addr, port,
-      Ssdp.Config.msearch_search_target(),
-      Ssdp.Config.msearch_max_seconds())
+
+    message =
+      build_search_msg(
+        addr,
+        port,
+        Ssdp.Config.msearch_search_target(),
+        Ssdp.Config.msearch_max_seconds()
+      )
+
     :gen_udp.send(socket, addr, port, message)
   end
 
   defp build_search_msg(addr, port, search_target, max_seconds) do
     "M-SEARCH * HTTP/1.1\r\n" <>
-    "Host: #{:inet_parse.ntoa(addr)}:#{port}\r\n" <>
-    "MAN: \"ssdp:discover\"\r\n" <>
-    "ST: #{search_target}\r\n" <>
-    "MX: #{max_seconds}\r\n\r\n"
+      "Host: #{:inet_parse.ntoa(addr)}:#{port}\r\n" <>
+      "MAN: \"ssdp:discover\"\r\n" <>
+      "ST: #{search_target}\r\n" <>
+      "MX: #{max_seconds}\r\n\r\n"
   end
 
   defp cancel_timer(state) do

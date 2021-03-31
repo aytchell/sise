@@ -1,8 +1,9 @@
 defmodule Ssdp.MCast.Processor do
-# SPDX-License-Identifier: Apache-2.0
+  # SPDX-License-Identifier: Apache-2.0
 
   def handle_msg(msg) do
     packet = Ssdp.Packet.from_iolist(msg)
+
     case packet.type do
       :notify -> handle_notify(packet)
       :msearch -> handle_msearch(packet)

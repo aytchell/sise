@@ -1,12 +1,13 @@
 defmodule Ssdp.Packet do
-# SPDX-License-Identifier: Apache-2.0
+  # SPDX-License-Identifier: Apache-2.0
 
   require Logger
 
   defmodule Utils do
     def split_http_header(header) do
       [name | [content]] = String.split(header, ":", parts: 2)
-      fn(x) -> String.trim(x) end
+      fn x -> String.trim(x) end
+
       {
         String.downcase(String.trim(name), :ascii),
         String.trim(content)
@@ -21,10 +22,13 @@ defmodule Ssdp.Packet do
   the base value is used.
   """
   def merge_packets(base, on_top) do
-    Map.merge(base, on_top,
-      fn _k, base_val, on_top_val ->
-        if is_nil(on_top_val) do base_val else on_top_val end
-      end)
+    Map.merge(base, on_top, fn _k, base_val, on_top_val ->
+      if is_nil(on_top_val) do
+        base_val
+      else
+        on_top_val
+      end
+    end)
   end
 
   @doc """
@@ -36,6 +40,7 @@ defmodule Ssdp.Packet do
       :neq
     else
       values = zip_packets_to_valuetuple_list(packet_1, packet_2)
+
       if all_valuetuples_equals(values) do
         Logger.info("compare packet -> true")
         :eq
@@ -52,26 +57,27 @@ defmodule Ssdp.Packet do
   """
   def diff(packet_1, packet_2) do
     key_value_tuples = zip_packets_to_keyvaluetuple_list(packet_1, packet_2)
-    Enum.reduce(key_value_tuples, [],
-      fn {k1, v1, v2}, acc ->
-        if v1 == v2 do
-          acc
-        else
-          [k1 | acc]
-        end
-      end)
+
+    Enum.reduce(key_value_tuples, [], fn {k1, v1, v2}, acc ->
+      if v1 == v2 do
+        acc
+      else
+        [k1 | acc]
+      end
+    end)
   end
 
   def contains_location(diff) do
     case diff do
       [] -> false
-      [:location|_tail] -> true
-      [_head|tail] -> contains_location(tail)
+      [:location | _tail] -> true
+      [_head | tail] -> contains_location(tail)
     end
   end
 
   def is_localhost(packet) do
     pattern = :binary.compile_pattern(["://localhost:", "://localhost/", "://127."])
+
     cond do
       is_nil(packet.location) -> false
       String.contains?(packet.location, pattern) -> true
@@ -81,25 +87,30 @@ defmodule Ssdp.Packet do
 
   defp zip_packets_to_valuetuple_list(packet_1, packet_2) do
     Enum.map(
-      Enum.to_list(Stream.zip(
-        Map.from_struct(packet_1),
-        Map.from_struct(packet_2)
-      )),
-      fn {{_k1, v1}, {_k2, v2}} -> {v1, v2} end)
+      Enum.to_list(
+        Stream.zip(
+          Map.from_struct(packet_1),
+          Map.from_struct(packet_2)
+        )
+      ),
+      fn {{_k1, v1}, {_k2, v2}} -> {v1, v2} end
+    )
   end
 
   defp zip_packets_to_keyvaluetuple_list(packet_1, packet_2) do
     Enum.map(
-      Enum.to_list(Stream.zip(
-        Map.from_struct(packet_1),
-        Map.from_struct(packet_2)
-      )),
-      fn {{k1, v1}, {_k2, v2}} -> {k1, v1, v2} end)
+      Enum.to_list(
+        Stream.zip(
+          Map.from_struct(packet_1),
+          Map.from_struct(packet_2)
+        )
+      ),
+      fn {{k1, v1}, {_k2, v2}} -> {k1, v1, v2} end
+    )
   end
 
   defp all_valuetuples_equals(list) do
-    Enum.reduce(list, true,
-      fn {v1, v2}, acc -> acc && values_equal(v1, v2) end)
+    Enum.reduce(list, true, fn {v1, v2}, acc -> acc && values_equal(v1, v2) end)
   end
 
   defp values_equal(v1, v2) do
@@ -114,7 +125,7 @@ defmodule Ssdp.Packet do
   defmodule Notify do
     alias Ssdp.Packet.Utils
 
-    defstruct [ :type, :location, :nt, :nts, :server, :usn, :host, :cache_control ]
+    defstruct [:type, :location, :nt, :nts, :server, :usn, :host, :cache_control]
 
     def parse(headers) do
       parse_accumulate(headers, %Ssdp.Packet.Notify{type: :notify})
@@ -128,7 +139,8 @@ defmodule Ssdp.Packet do
     end
 
     defp add_entry(packet, header) do
-      { name, content } = Utils.split_http_header(header)
+      {name, content} = Utils.split_http_header(header)
+
       case name do
         "host" -> %{packet | host: content}
         "cache-control" -> %{packet | cache_control: content}
@@ -137,7 +149,6 @@ defmodule Ssdp.Packet do
         "nts" -> %{packet | nts: content}
         "server" -> %{packet | server: content}
         "usn" -> %{packet | usn: content}
-
         # Fields contained in M-Search responses:
 
         # 'st' is basically the same as 'nt' in Notify messages
@@ -155,7 +166,7 @@ defmodule Ssdp.Packet do
   defmodule MSearch do
     alias Ssdp.Packet.Utils
 
-    defstruct [ :type, :host, :man, :mx, :st, :user_agent, :tcpport, :cpfn, :cpuuid ]
+    defstruct [:type, :host, :man, :mx, :st, :user_agent, :tcpport, :cpfn, :cpuuid]
 
     def parse(headers) do
       parse_accumulate(headers, %Ssdp.Packet.MSearch{type: :msearch})
@@ -169,7 +180,8 @@ defmodule Ssdp.Packet do
     end
 
     defp add_entry(packet, header) do
-      { name, content } = Utils.split_http_header(header)
+      {name, content} = Utils.split_http_header(header)
+
       case name do
         "host" -> %{packet | host: content}
         "man" -> %{packet | man: content}
@@ -188,14 +200,16 @@ defmodule Ssdp.Packet do
   end
 
   def from_string(uhttp_request) do
-    [request_line | headers] =
-      String.split(uhttp_request, ["\r\n", "\n"], trim: true)
+    [request_line | headers] = String.split(uhttp_request, ["\r\n", "\n"], trim: true)
+
     cond do
       request_line == "NOTIFY * HTTP/1.1" ->
         Ssdp.Packet.Notify.parse(headers)
+
       # M-Search responses are treated as if they are NOTIFY messages
       request_line == "HTTP/1.1 200 OK" ->
         Ssdp.Packet.Notify.parse(headers)
+
       request_line == "M-SEARCH * HTTP/1.1" ->
         Ssdp.Packet.MSearch.parse(headers)
     end

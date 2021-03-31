@@ -1,5 +1,5 @@
 defmodule Ssdp.Cache.DeviceDb do
-# SPDX-License-Identifier: Apache-2.0
+  # SPDX-License-Identifier: Apache-2.0
 
   use GenServer
   require Logger
@@ -72,11 +72,13 @@ defmodule Ssdp.Cache.DeviceDb do
 
   def handle_cast({:delete, packet}, entries) do
     nt_map = Map.get(entries, packet.nt)
+
     if is_nil(nt_map) do
       {:noreply, entries}
     else
       entry = Map.get(nt_map, packet.usn)
-      if (is_nil(entry)) do
+
+      if is_nil(entry) do
         {:noreply, entries}
       else
         Logger.info("Deleting SSDP packet #{inspect(entry.nt)}")
@@ -88,8 +90,7 @@ defmodule Ssdp.Cache.DeviceDb do
   end
 
   def handle_cast({:sub, pid, notification_type}, entries) do
-    Ssdp.Cache.Notifier.subscribe(
-      pid, notification_type, flatten_entries(entries))
+    Ssdp.Cache.Notifier.subscribe(pid, notification_type, flatten_entries(entries))
     {:noreply, entries}
   end
 
@@ -105,23 +106,25 @@ defmodule Ssdp.Cache.DeviceDb do
 
   defp add_or_update_packet(current_packets, new_packet) do
     nt_map = Map.get(current_packets, new_packet.nt)
+
     if is_nil(nt_map) do
       Logger.info("Added first entry for #{new_packet.nt}")
       Ssdp.Cache.Notifier.notify_add(new_packet)
-      Map.put(current_packets, new_packet.nt,
-        %{ new_packet.usn => new_packet })
+      Map.put(current_packets, new_packet.nt, %{new_packet.usn => new_packet})
     else
       if is_nil(Map.get(nt_map, new_packet.usn)) do
         Logger.info("Added new entry for #{new_packet.nt}")
         Ssdp.Cache.Notifier.notify_add(new_packet)
-        Map.update!(current_packets, new_packet.nt,
-          fn m -> Map.put(m, new_packet.usn, new_packet) end)
+
+        Map.update!(current_packets, new_packet.nt, fn m ->
+          Map.put(m, new_packet.usn, new_packet)
+        end)
       else
         Logger.info("Updating entry for #{new_packet.nt}:#{new_packet.usn}")
-        Map.update!(current_packets, new_packet.nt,
-          fn m -> Map.update!(m, new_packet.usn,
-            fn old -> update_entry(old, new_packet) end)
-          end)
+
+        Map.update!(current_packets, new_packet.nt, fn m ->
+          Map.update!(m, new_packet.usn, fn old -> update_entry(old, new_packet) end)
+        end)
       end
     end
   end
@@ -130,9 +133,14 @@ defmodule Ssdp.Cache.DeviceDb do
   # check for differences, trigger notify and return new entry
   defp update_entry(old, new) do
     diff = Ssdp.Packet.diff(old, new)
+
     cond do
-      Enum.empty?(diff) -> old
-      Ssdp.Packet.contains_location(diff) -> take_preferred(old, new)
+      Enum.empty?(diff) ->
+        old
+
+      Ssdp.Packet.contains_location(diff) ->
+        take_preferred(old, new)
+
       true ->
         Ssdp.Cache.Notifier.notify_update(new)
         new
@@ -179,6 +187,7 @@ defmodule Ssdp.Cache.DeviceDb do
 
   defp delete_packet(current_packets, old_packet) do
     new_nt = Map.delete(Map.get(current_packets, old_packet.nt), old_packet.usn)
+
     if map_size(new_nt) == 0 do
       Map.delete(current_packets, old_packet.nt)
     else
