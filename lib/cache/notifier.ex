@@ -12,12 +12,12 @@ defmodule Ssdp.Cache.Notifier do
     }
   end
 
-  defmodule Subscriber do
+  defmodule Observer do
     @enforce_keys [:pid, :type, :monitor_ref]
     defstruct [:pid, :type, :monitor_ref]
 
     def build(pid, type, ref) do
-      %Subscriber{pid: pid, type: type, monitor_ref: ref}
+      %Observer{pid: pid, type: type, monitor_ref: ref}
     end
   end
 
@@ -25,8 +25,8 @@ defmodule Ssdp.Cache.Notifier do
     GenServer.start_link(__MODULE__, [], opts)
   end
 
-  def subscribe(pid, type, packets) do
-    GenServer.cast(Ssdp.Cache.Notifier, {:sub, pid, type, packets})
+  def subscribe(pid, type, packet_list) do
+    GenServer.cast(Ssdp.Cache.Notifier, {:sub, pid, type, packet_list})
   end
 
   def unsubscribe(pid, type) do
@@ -46,77 +46,77 @@ defmodule Ssdp.Cache.Notifier do
   end
 
   @impl true
-  def init(state) do
-    {:ok, state}
+  def init(observer_list) do
+    {:ok, observer_list}
   end
 
   @impl true
-  def handle_cast({:sub, pid, type, packets}, state) do
+  def handle_cast({:sub, pid, type, packet_list}, observer_list) do
     ref = Process.monitor(pid)
-    listener = Subscriber.build(pid, type, ref)
-    Enum.each(packets, fn p -> notify_listener(p, :ssdp_add, listener) end)
-    {:noreply, [listener | state]}
+    obs = Observer.build(pid, type, ref)
+    Enum.each(packet_list, fn pkg -> notify_observer(pkg, :ssdp_add, obs) end)
+    {:noreply, [obs | observer_list]}
   end
 
-  def handle_cast({:unsub, pid, type}, state) do
+  def handle_cast({:unsub, pid, type}, observer_list) do
     Logger.debug("Ssdp-Listener unsubscribed; will no longer notify it")
-    {:noreply, delete_listener(state, pid, type, [])}
+    {:noreply, delete_observer(observer_list, pid, type, [])}
   end
 
-  def handle_cast({:notify_add, packet}, state) do
-    notify(packet, :ssdp_add, state)
-    {:noreply, state}
+  def handle_cast({:notify_add, packet}, observer_list) do
+    notify_observer_list(packet, :ssdp_add, observer_list)
+    {:noreply, observer_list}
   end
 
-  def handle_cast({:notify_update, packet}, state) do
-    notify(packet, :ssdp_update, state)
-    {:noreply, state}
+  def handle_cast({:notify_update, packet}, observer_list) do
+    notify_observer_list(packet, :ssdp_update, observer_list)
+    {:noreply, observer_list}
   end
 
-  def handle_cast({:notify_delete, packet}, state) do
-    notify(packet, :ssdp_delete, state)
-    {:noreply, state}
+  def handle_cast({:notify_delete, packet}, observer_list) do
+    notify_observer_list(packet, :ssdp_delete, observer_list)
+    {:noreply, observer_list}
   end
 
   @impl true
-  def handle_info({:DOWN, ref, :process, _object, _reason}, state) do
+  def handle_info({:DOWN, ref, :process, _object, _reason}, observer_list) do
     Logger.debug("Ssdp-Listener died; will no longer notify it")
-    {:noreply, Enum.filter(state, fn sub -> sub.monitor_ref != ref end)}
+    {:noreply, Enum.filter(observer_list, fn sub -> sub.monitor_ref != ref end)}
   end
 
-  def handle_info(_, state) do
-    {:noreply, state}
+  def handle_info(_, observer_list) do
+    {:noreply, observer_list}
   end
 
-  defp notify(packet, what, listeners) do
-    case listeners do
+  defp notify_observer_list(packet, what, observer_list) do
+    case observer_list do
       [] -> nil
       [head | tail] ->
-        notify_listener(packet, what, head)
-        notify(packet, what, tail)
+        notify_observer(packet, what, head)
+        notify_observer_list(packet, what, tail)
     end
   end
 
-  defp notify_listener(packet, what, listener) do
+  defp notify_observer(packet, what, obs) do
     cond do
-      listener.type == "all" -> send(listener.pid, {what, packet})
-      listener.type == packet.nt -> send(listener.pid, {what, packet})
+      obs.type == "all" -> send(obs.pid, {what, packet})
+      obs.type == packet.nt -> send(obs.pid, {what, packet})
       true -> nil
     end
   end
 
-  defp delete_listener(listeners, pid, type, acc) do
-    case listeners do
+  defp delete_observer(observer_list, pid, type, acc) do
+    case observer_list do
       [] -> acc
       [head | tail] ->
         cond do
-          head.pid != pid -> delete_listener(tail, pid, type, [head | acc])
+          head.pid != pid -> delete_observer(tail, pid, type, [head | acc])
           true ->
             if type == "all" || type == head.type do
               Process.demonitor(head.monitor_ref)
-              delete_listener(tail, pid, type, acc)
+              delete_observer(tail, pid, type, acc)
             else
-              delete_listener(tail, pid, type, [head | acc])
+              delete_observer(tail, pid, type, [head | acc])
             end
         end
     end
