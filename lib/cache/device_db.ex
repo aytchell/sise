@@ -71,13 +71,19 @@ defmodule Ssdp.Cache.DeviceDb do
   end
 
   def handle_cast({:delete, packet}, entries) do
-    if is_nil(Map.get(entries, packet.nt)) do
+    nt_map = Map.get(entries, packet.nt)
+    if is_nil(nt_map) do
       {:noreply, entries}
     else
-      Logger.info("Deleting SSDP packet #{inspect(packet.nt)}")
-      Ssdp.Cache.Notifier.notify_delete(packet)
-      new_entries = delete_packet(entries, packet)
-      {:noreply, new_entries}
+      entry = Map.get(nt_map, packet.usn)
+      if (is_nil(entry)) do
+        {:noreply, entries}
+      else
+        Logger.info("Deleting SSDP packet #{inspect(entry.nt)}")
+        Ssdp.Cache.Notifier.notify_delete(entry)
+        new_entries = delete_packet(entries, entry)
+        {:noreply, new_entries}
+      end
     end
   end
 
