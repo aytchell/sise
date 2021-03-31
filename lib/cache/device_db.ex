@@ -124,7 +124,7 @@ defmodule Ssdp.Cache.DeviceDb do
   defp update_entry(old, new) do
     diff = Ssdp.Packet.diff(old, new)
     cond do
-      is_empty(diff) -> old
+      Enum.empty?(diff) -> old
       Ssdp.Packet.contains_location(diff) -> take_preferred(old, new)
       true ->
         Ssdp.Cache.Notifier.notify_update(new)
@@ -167,13 +167,6 @@ defmodule Ssdp.Cache.DeviceDb do
           merged
         end
       end
-    end
-  end
-
-  defp is_empty(list) do
-    case list do
-      [] -> true
-      _ -> false
     end
   end
 
