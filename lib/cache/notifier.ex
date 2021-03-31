@@ -2,6 +2,7 @@ defmodule Ssdp.Cache.Notifier do
 # SPDX-License-Identifier: Apache-2.0
 
   use GenServer
+  require Logger
 
   def child_spec() do
     %{
@@ -12,11 +13,11 @@ defmodule Ssdp.Cache.Notifier do
   end
 
   defmodule Subscriber do
-    @enforce_keys [:pid, :type]
-    defstruct [:pid, :type]
+    @enforce_keys [:pid, :type, :monitor_ref]
+    defstruct [:pid, :type, :monitor_ref]
 
-    def build(pid, type) do
-      %Subscriber{pid: pid, type: type}
+    def build(pid, type, ref) do
+      %Subscriber{pid: pid, type: type, monitor_ref: ref}
     end
   end
 
@@ -51,16 +52,15 @@ defmodule Ssdp.Cache.Notifier do
 
   @impl true
   def handle_cast({:sub, pid, type, packets}, state) do
-    listener = Subscriber.build(pid, type)
+    ref = Process.monitor(pid)
+    listener = Subscriber.build(pid, type, ref)
     Enum.each(packets, fn p -> notify_listener(p, :ssdp_add, listener) end)
     {:noreply, [listener | state]}
   end
 
   def handle_cast({:unsub, pid, type}, state) do
-    case type do
-      "all" -> {:noreply, Enum.filter(state, fn sub -> sub.pid != pid end)}
-      _ -> {:noreply, List.delete(state, Subscriber.build(pid, type))}
-    end
+    Logger.debug("Ssdp-Listener unsubscribed; will no longer notify it")
+    {:noreply, delete_listener(state, pid, type, [])}
   end
 
   def handle_cast({:notify_add, packet}, state) do
@@ -78,6 +78,16 @@ defmodule Ssdp.Cache.Notifier do
     {:noreply, state}
   end
 
+  @impl true
+  def handle_info({:DOWN, ref, :process, _object, _reason}, state) do
+    Logger.debug("Ssdp-Listener died; will no longer notify it")
+    {:noreply, Enum.filter(state, fn sub -> sub.monitor_ref != ref end)}
+  end
+
+  def handle_info(_, state) do
+    {:noreply, state}
+  end
+
   defp notify(packet, what, listeners) do
     case listeners do
       [] -> nil
@@ -92,6 +102,23 @@ defmodule Ssdp.Cache.Notifier do
       listener.type == "all" -> send(listener.pid, {what, packet})
       listener.type == packet.nt -> send(listener.pid, {what, packet})
       true -> nil
+    end
+  end
+
+  defp delete_listener(listeners, pid, type, acc) do
+    case listeners do
+      [] -> acc
+      [head | tail] ->
+        cond do
+          head.pid != pid -> delete_listener(tail, pid, type, [head | acc])
+          true ->
+            if type == "all" || type == head.type do
+              Process.demonitor(head.monitor_ref)
+              delete_listener(tail, pid, type, acc)
+            else
+              delete_listener(tail, pid, type, [head | acc])
+            end
+        end
     end
   end
 end
