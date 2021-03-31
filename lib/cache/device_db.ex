@@ -150,38 +150,19 @@ defmodule Ssdp.Cache.DeviceDb do
   defp take_preferred(old_packet, new_packet) do
     old_is_local = Ssdp.Packet.is_localhost(old_packet)
     new_is_local = Ssdp.Packet.is_localhost(new_packet)
+    pref_local = Ssdp.Config.detect_prefers_localhost()
+
     merged = Ssdp.Packet.merge_packets(old_packet, new_packet)
 
-    if Ssdp.Config.detect_prefers_localhost() do
-      if old_is_local do
-        if new_is_local do
-          # both are localhost (preferred)
-          Ssdp.Cache.Notifier.notify_update(merged)
-          merged
-        else
-          # old is localhost (preferred); new isn't
-          old_packet
-        end
-      else
-        # old is not localhost (which would be preferred)
-        Ssdp.Cache.Notifier.notify_update(merged)
-        merged
-      end
+    if pref_local == old_is_local && pref_local != new_is_local do
+      # if the old packet fits the preference but the new one doesn't
+      # then we keep the old entry
+      old_packet
     else
-      if old_is_local do
-        # old is localhost (not preferred)
-        Ssdp.Cache.Notifier.notify_update(merged)
-        merged
-      else
-        if new_is_local do
-          # new is localhost and old isn't (which is preferred)
-          old_packet
-        else
-          # both are not localhost (preferred)
-          Ssdp.Cache.Notifier.notify_update(merged)
-          merged
-        end
-      end
+      # in all other cases we take the new entry (but fill in missing values
+      # with the old entry's values)
+      Ssdp.Cache.Notifier.notify_update(merged)
+      merged
     end
   end
 
