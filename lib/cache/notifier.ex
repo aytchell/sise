@@ -89,12 +89,7 @@ defmodule Ssdp.Cache.Notifier do
   end
 
   defp notify_observer_list(packet, what, observer_list) do
-    case observer_list do
-      [] -> nil
-      [head | tail] ->
-        notify_observer(packet, what, head)
-        notify_observer_list(packet, what, tail)
-    end
+    Enum.each(observer_list, fn obs -> notify_observer(packet, what, obs) end)
   end
 
   defp notify_observer(packet, what, obs) do
