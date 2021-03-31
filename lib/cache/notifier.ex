@@ -24,20 +24,12 @@ defmodule Ssdp.Cache.Notifier do
     GenServer.start_link(__MODULE__, [], opts)
   end
 
-  def subscribe(type) do
-    GenServer.cast(Ssdp.Cache.Notifier, {:subscribe, self(), type})
+  def subscribe(pid, type, packets) do
+    GenServer.cast(Ssdp.Cache.Notifier, {:sub, pid, type, packets})
   end
 
-  def subscribe_all() do
-    subscribe("all")
-  end
-
-  def unsubscribe(type) do
-    GenServer.cast(Ssdp.Cache.Notifier, {:unsubscribe, self(), type})
-  end
-
-  def unsubscribe_all() do
-    unsubscribe("all")
+  def unsubscribe(pid, type) do
+    GenServer.cast(Ssdp.Cache.Notifier, {:unsub, pid, type})
   end
 
   def notify_add(packet) do
@@ -58,11 +50,13 @@ defmodule Ssdp.Cache.Notifier do
   end
 
   @impl true
-  def handle_cast({:subscribe, pid, type}, state) do
-    {:noreply, [Subscriber.build(pid, type) | state]}
+  def handle_cast({:sub, pid, type, packets}, state) do
+    listener = Subscriber.build(pid, type)
+    Enum.each(packets, fn p -> notify_listener(p, :ssdp_add, listener) end)
+    {:noreply, [listener | state]}
   end
 
-  def handle_cast({:unsubscribe, pid, type}, state) do
+  def handle_cast({:unsub, pid, type}, state) do
     case type do
       "all" -> {:noreply, Enum.filter(state, fn sub -> sub.pid != pid end)}
       _ -> {:noreply, List.delete(state, Subscriber.build(pid, type))}
