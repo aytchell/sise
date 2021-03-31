@@ -1,11 +1,10 @@
 defmodule Ssdp.Config do
-  @two_minutes 2 * 60 * 1_000
   @twenty_minutes 20 * 60 * 1_000
 
   @msearch_ttl_default 2
   @msearch_find_locals_default false
   @msearch_search_target_default "ssdp:all"
-  @msearch_repeat_interval_msec_default @two_minutes
+  @msearch_repeat_interval_msec_default @twenty_minutes
   @msearch_max_seconds_default 5
 
   # UPnP/SSDP spec says:
