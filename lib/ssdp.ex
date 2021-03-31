@@ -27,12 +27,4 @@ defmodule Ssdp do
   def unsubscribe_all() do
     Ssdp.Cache.DeviceDb.unsubscribe("all")
   end
-
-  def multicast_addr() do
-    {239, 255, 255, 250}
-  end
-
-  def multicast_port() do
-    1900
-  end
 end

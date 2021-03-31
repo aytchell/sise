@@ -108,8 +108,8 @@ defmodule Ssdp.Search.Sender do
   end
 
   defp send_msearch_message(socket) do
-    addr = Ssdp.multicast_addr()
-    port = Ssdp.multicast_port()
+    addr = Ssdp.Config.multicast_addr()
+    port = Ssdp.Config.multicast_port()
     message = build_search_msg(
       addr, port,
       Ssdp.Config.msearch_search_target(),

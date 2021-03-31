@@ -63,4 +63,22 @@ defmodule Ssdp.Config do
   def detect_prefers_localhost() do
     true
   end
+
+  @doc """
+  The multicast IP address to be used.
+  In the vast majority of cases there's no need to change this and this
+  function's purpose is mostly to have a name for this magic value.
+  """
+  def multicast_addr() do
+    {239, 255, 255, 250}
+  end
+
+  @doc """
+  The multicast UDP port to be used.
+  In the vast majority of cases there's no need to change this and this
+  function's purpose is mostly to have a name for this magic value.
+  """
+  def multicast_port() do
+    1900
+  end
 end
