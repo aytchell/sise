@@ -82,7 +82,8 @@ defmodule Ssdp.Cache.DeviceDb do
   end
 
   def handle_cast({:sub, pid, notification_type}, entries) do
-    Ssdp.Cache.Notifier.subscribe(pid, notification_type, entries)
+    Ssdp.Cache.Notifier.subscribe(
+      pid, notification_type, flatten_entries(entries))
     {:noreply, entries}
   end
 
@@ -177,5 +178,12 @@ defmodule Ssdp.Cache.DeviceDb do
     else
       Map.put(current_packets, old_packet.nt, new_nt)
     end
+  end
+
+  # our stored ssdp entries are organized as Map<:nt, Map<:usn, packet>>.
+  # This function flattend this structure so that we get a List<packet>
+  # which is required when we'd like to inform a new listener
+  defp flatten_entries(entries) do
+    Enum.flat_map(Map.values(entries), fn x -> Map.values(x) end)
   end
 end
