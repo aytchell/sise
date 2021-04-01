@@ -1,21 +1,8 @@
-# SsdpClient
+# Sise
 
-**TODO: Add description**
+Sise is a library that implements the **si**mple **se**rvice
+discovery protocol (SSDP).
 
-## Installation
-
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `sise` to your list of dependencies in `mix.exs`:
-
-```elixir
-def deps do
-  [
-    {:sise, "~> 0.1.0"}
-  ]
-end
-```
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/sise](https://hexdocs.pm/sise).
+In its current state the library is only listening for announcements (and
+updates) but it's not able to publish custom device or service information.
 
