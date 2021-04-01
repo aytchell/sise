@@ -101,7 +101,7 @@ defmodule Ssdp.Cache.DeviceDb do
 
   @impl true
   def handle_call(:get, _from, entries) do
-    {:reply, entries, entries}
+    {:reply, flatten_entries(entries), entries}
   end
 
   defp add_or_update_packet(current_packets, new_packet) do
