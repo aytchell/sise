@@ -1,4 +1,4 @@
-defmodule Ssdp.Search.Sender do
+defmodule Sise.Search.Sender do
   # SPDX-License-Identifier: Apache-2.0
 
   require Logger
@@ -12,7 +12,7 @@ defmodule Ssdp.Search.Sender do
   def child_spec() do
     %{
       id: __MODULE__,
-      name: Ssdp.Search.Sender,
+      name: Sise.Search.Sender,
       start: {__MODULE__, :start_link, []}
     }
   end
@@ -51,8 +51,8 @@ defmodule Ssdp.Search.Sender do
   def handle_info({:udp, _socket, _host, _port, msg}, state) do
     {:ok, _pid} =
       Task.Supervisor.start_child(
-        Ssdp.Search.ProcessorSupervisor,
-        fn -> Ssdp.Search.Processor.handle_msg(msg) end
+        Sise.Search.ProcessorSupervisor,
+        fn -> Sise.Search.Processor.handle_msg(msg) end
       )
 
     {:noreply, state}
@@ -90,13 +90,13 @@ defmodule Ssdp.Search.Sender do
 
     if state.attempts_left <= 1 do
       # This was the last attempt.
-      timeout_msec = (Ssdp.Config.msearch_max_seconds() + 1) * 1000
+      timeout_msec = (Sise.Config.msearch_max_seconds() + 1) * 1000
       Process.send_after(self(), :timeout, timeout_msec)
 
       {:noreply,
        %State{
          state
-         | timer_ref: Process.send_after(self(), :ok, Ssdp.Config.msearch_repeat_interval_msec())
+         | timer_ref: Process.send_after(self(), :ok, Sise.Config.msearch_repeat_interval_msec())
        }}
     else
       {:noreply,
@@ -111,21 +111,21 @@ defmodule Ssdp.Search.Sender do
   defp open_unicast_socket() do
     :gen_udp.open(0, [
       {:reuseaddr, true},
-      {:multicast_ttl, Ssdp.Config.msearch_ttl()},
-      {:multicast_loop, Ssdp.Config.msearch_find_locals()}
+      {:multicast_ttl, Sise.Config.msearch_ttl()},
+      {:multicast_loop, Sise.Config.msearch_find_locals()}
     ])
   end
 
   defp send_msearch_message(socket) do
-    addr = Ssdp.Config.multicast_addr()
-    port = Ssdp.Config.multicast_port()
+    addr = Sise.Config.multicast_addr()
+    port = Sise.Config.multicast_port()
 
     message =
       build_search_msg(
         addr,
         port,
-        Ssdp.Config.msearch_search_target(),
-        Ssdp.Config.msearch_max_seconds()
+        Sise.Config.msearch_search_target(),
+        Sise.Config.msearch_max_seconds()
       )
 
     :gen_udp.send(socket, addr, port, message)

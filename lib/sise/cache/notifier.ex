@@ -1,4 +1,4 @@
-defmodule Ssdp.Cache.Notifier do
+defmodule Sise.Cache.Notifier do
   # SPDX-License-Identifier: Apache-2.0
 
   use GenServer
@@ -6,9 +6,9 @@ defmodule Ssdp.Cache.Notifier do
 
   def child_spec() do
     %{
-      id: Ssdp.Cache.Notifier,
-      name: Ssdp.Cache.Notifier,
-      start: {Ssdp.Cache.Notifier, :start_link, []}
+      id: Sise.Cache.Notifier,
+      name: Sise.Cache.Notifier,
+      start: {Sise.Cache.Notifier, :start_link, []}
     }
   end
 
@@ -26,23 +26,23 @@ defmodule Ssdp.Cache.Notifier do
   end
 
   def subscribe(pid, type, packet_list) do
-    GenServer.cast(Ssdp.Cache.Notifier, {:sub, pid, type, packet_list})
+    GenServer.cast(Sise.Cache.Notifier, {:sub, pid, type, packet_list})
   end
 
   def unsubscribe(pid, type) do
-    GenServer.cast(Ssdp.Cache.Notifier, {:unsub, pid, type})
+    GenServer.cast(Sise.Cache.Notifier, {:unsub, pid, type})
   end
 
   def notify_add(packet) do
-    GenServer.cast(Ssdp.Cache.Notifier, {:notify_add, packet})
+    GenServer.cast(Sise.Cache.Notifier, {:notify_add, packet})
   end
 
   def notify_update(packet) do
-    GenServer.cast(Ssdp.Cache.Notifier, {:notify_update, packet})
+    GenServer.cast(Sise.Cache.Notifier, {:notify_update, packet})
   end
 
   def notify_delete(packet) do
-    GenServer.cast(Ssdp.Cache.Notifier, {:notify_delete, packet})
+    GenServer.cast(Sise.Cache.Notifier, {:notify_delete, packet})
   end
 
   @impl true

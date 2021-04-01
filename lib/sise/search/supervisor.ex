@@ -1,4 +1,4 @@
-defmodule Ssdp.MCast.Supervisor do
+defmodule Sise.Search.Supervisor do
   # SPDX-License-Identifier: Apache-2.0
 
   use Supervisor
@@ -10,8 +10,8 @@ defmodule Ssdp.MCast.Supervisor do
   @impl true
   def init(:ok) do
     children = [
-      {Ssdp.MCast.Listener, name: Ssdp.MCast.Supervisor},
-      {Task.Supervisor, name: Ssdp.MCast.ProcessorSupervisor, strategy: :one_for_one}
+      {Sise.Search.Sender, name: Sise.Search.Sender},
+      {Task.Supervisor, name: Sise.Search.ProcessorSupervisor, strategy: :one_for_one}
     ]
 
     Supervisor.init(children, strategy: :one_for_one)

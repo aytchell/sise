@@ -1,8 +1,8 @@
-defmodule Ssdp.MCast.Processor do
+defmodule Sise.MCast.Processor do
   # SPDX-License-Identifier: Apache-2.0
 
   def handle_msg(msg) do
-    packet = Ssdp.Packet.from_iolist(msg)
+    packet = Sise.Packet.from_iolist(msg)
 
     case packet.type do
       :notify -> handle_notify(packet)
@@ -13,9 +13,9 @@ defmodule Ssdp.MCast.Processor do
 
   def handle_notify(packet) do
     case packet.nts do
-      "ssdp:alive" -> Ssdp.Cache.DeviceDb.add(packet)
-      "ssdp:update" -> Ssdp.Cache.DeviceDb.update(packet)
-      "ssdp:byebye" -> Ssdp.Cache.DeviceDb.delete(packet)
+      "ssdp:alive" -> Sise.Cache.DeviceDb.add(packet)
+      "ssdp:update" -> Sise.Cache.DeviceDb.update(packet)
+      "ssdp:byebye" -> Sise.Cache.DeviceDb.delete(packet)
     end
   end
 

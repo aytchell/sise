@@ -1,4 +1,4 @@
-defmodule Ssdp.Cache.Supervisor do
+defmodule Sise.Supervisor do
   # SPDX-License-Identifier: Apache-2.0
 
   use Supervisor
@@ -10,8 +10,9 @@ defmodule Ssdp.Cache.Supervisor do
   @impl true
   def init(:ok) do
     children = [
-      {Ssdp.Cache.DeviceDb, name: Ssdp.Cache.DeviceDb},
-      {Ssdp.Cache.Notifier, name: Ssdp.Cache.Notifier}
+      {Sise.Cache.Supervisor, name: Sise.Cache.Supervisor},
+      {Sise.MCast.Supervisor, name: Sise.MCast.Supervisor},
+      {Sise.Search.Supervisor, name: Sise.Search.Supervisor}
     ]
 
     Supervisor.init(children, strategy: :rest_for_one)

@@ -1,4 +1,4 @@
-defmodule Ssdp.Packet do
+defmodule Sise.Packet do
   # SPDX-License-Identifier: Apache-2.0
 
   require Logger
@@ -123,12 +123,12 @@ defmodule Ssdp.Packet do
   end
 
   defmodule Notify do
-    alias Ssdp.Packet.Utils
+    alias Sise.Packet.Utils
 
     defstruct [:type, :location, :nt, :nts, :server, :usn, :host, :cache_control]
 
     def parse(headers) do
-      parse_accumulate(headers, %Ssdp.Packet.Notify{type: :notify})
+      parse_accumulate(headers, %Sise.Packet.Notify{type: :notify})
     end
 
     defp parse_accumulate(headers, packet) do
@@ -164,12 +164,12 @@ defmodule Ssdp.Packet do
   end
 
   defmodule MSearch do
-    alias Ssdp.Packet.Utils
+    alias Sise.Packet.Utils
 
     defstruct [:type, :host, :man, :mx, :st, :user_agent, :tcpport, :cpfn, :cpuuid]
 
     def parse(headers) do
-      parse_accumulate(headers, %Ssdp.Packet.MSearch{type: :msearch})
+      parse_accumulate(headers, %Sise.Packet.MSearch{type: :msearch})
     end
 
     defp parse_accumulate(headers, packet) do
@@ -204,14 +204,14 @@ defmodule Ssdp.Packet do
 
     cond do
       request_line == "NOTIFY * HTTP/1.1" ->
-        Ssdp.Packet.Notify.parse(headers)
+        Sise.Packet.Notify.parse(headers)
 
       # M-Search responses are treated as if they are NOTIFY messages
       request_line == "HTTP/1.1 200 OK" ->
-        Ssdp.Packet.Notify.parse(headers)
+        Sise.Packet.Notify.parse(headers)
 
       request_line == "M-SEARCH * HTTP/1.1" ->
-        Ssdp.Packet.MSearch.parse(headers)
+        Sise.Packet.MSearch.parse(headers)
     end
   end
 end

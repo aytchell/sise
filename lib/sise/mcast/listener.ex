@@ -1,4 +1,4 @@
-defmodule Ssdp.MCast.Listener do
+defmodule Sise.MCast.Listener do
   # SPDX-License-Identifier: Apache-2.0
 
   def child_spec(_arg) do
@@ -13,8 +13,8 @@ defmodule Ssdp.MCast.Listener do
   end
 
   defp open_and_listen() do
-    ssdp_mcast = Ssdp.Config.multicast_addr()
-    ssdp_port = Ssdp.Config.multicast_port()
+    ssdp_mcast = Sise.Config.multicast_addr()
+    ssdp_port = Sise.Config.multicast_port()
     any = {0, 0, 0, 0}
 
     {:ok, socket} =
@@ -32,8 +32,8 @@ defmodule Ssdp.MCast.Listener do
         # forward the received packet but don't hand out the socket
         {:ok, _pid} =
           Task.Supervisor.start_child(
-            Ssdp.MCast.ProcessorSupervisor,
-            fn -> Ssdp.MCast.Processor.handle_msg(msg) end
+            Sise.MCast.ProcessorSupervisor,
+            fn -> Sise.MCast.Processor.handle_msg(msg) end
           )
 
         # continue listening for packets

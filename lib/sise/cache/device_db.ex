@@ -1,4 +1,4 @@
-defmodule Ssdp.Cache.DeviceDb do
+defmodule Sise.Cache.DeviceDb do
   # SPDX-License-Identifier: Apache-2.0
 
   use GenServer
@@ -6,9 +6,9 @@ defmodule Ssdp.Cache.DeviceDb do
 
   def child_spec() do
     %{
-      id: Ssdp.Cache.DeviceDb,
-      name: Ssdp.Cache.DeviceDb,
-      start: {Ssdp.Cache.DeviceDb, :start_link, %{}}
+      id: Sise.Cache.DeviceDb,
+      name: Sise.Cache.DeviceDb,
+      start: {Sise.Cache.DeviceDb, :start_link, %{}}
     }
   end
 
@@ -17,15 +17,15 @@ defmodule Ssdp.Cache.DeviceDb do
   end
 
   def get_all() do
-    GenServer.call(Ssdp.Cache.DeviceDb, :get)
+    GenServer.call(Sise.Cache.DeviceDb, :get)
   end
 
   def subscribe(notification_type) do
-    GenServer.cast(Ssdp.Cache.DeviceDb, {:sub, self(), notification_type})
+    GenServer.cast(Sise.Cache.DeviceDb, {:sub, self(), notification_type})
   end
 
   def unsubscribe(notification_type) do
-    GenServer.cast(Ssdp.Cache.DeviceDb, {:unsub, self(), notification_type})
+    GenServer.cast(Sise.Cache.DeviceDb, {:unsub, self(), notification_type})
   end
 
   def add(packet) do
@@ -43,7 +43,7 @@ defmodule Ssdp.Cache.DeviceDb do
   defp cast_if_nt_and_usn(packet, command) do
     if Map.has_key?(packet, :nt) do
       if Map.has_key?(packet, :usn) do
-        GenServer.cast(Ssdp.Cache.DeviceDb, {command, packet})
+        GenServer.cast(Sise.Cache.DeviceDb, {command, packet})
       else
         cmd = Atom.to_string(command)
         Logger.warn("Won't #{cmd} SSDP packet since it's missing 'USN'")
@@ -82,7 +82,7 @@ defmodule Ssdp.Cache.DeviceDb do
         {:noreply, entries}
       else
         Logger.info("Deleting SSDP packet #{inspect(entry.nt)}")
-        Ssdp.Cache.Notifier.notify_delete(entry)
+        Sise.Cache.Notifier.notify_delete(entry)
         new_entries = delete_packet(entries, entry)
         {:noreply, new_entries}
       end
@@ -90,12 +90,12 @@ defmodule Ssdp.Cache.DeviceDb do
   end
 
   def handle_cast({:sub, pid, notification_type}, entries) do
-    Ssdp.Cache.Notifier.subscribe(pid, notification_type, flatten_entries(entries))
+    Sise.Cache.Notifier.subscribe(pid, notification_type, flatten_entries(entries))
     {:noreply, entries}
   end
 
   def handle_cast({:unsub, pid, notification_type}, entries) do
-    Ssdp.Cache.Notifier.unsubscribe(pid, notification_type)
+    Sise.Cache.Notifier.unsubscribe(pid, notification_type)
     {:noreply, entries}
   end
 
@@ -109,12 +109,12 @@ defmodule Ssdp.Cache.DeviceDb do
 
     if is_nil(nt_map) do
       Logger.info("Added first entry for #{new_packet.nt}")
-      Ssdp.Cache.Notifier.notify_add(new_packet)
+      Sise.Cache.Notifier.notify_add(new_packet)
       Map.put(current_packets, new_packet.nt, %{new_packet.usn => new_packet})
     else
       if is_nil(Map.get(nt_map, new_packet.usn)) do
         Logger.info("Added new entry for #{new_packet.nt}")
-        Ssdp.Cache.Notifier.notify_add(new_packet)
+        Sise.Cache.Notifier.notify_add(new_packet)
 
         Map.update!(current_packets, new_packet.nt, fn m ->
           Map.put(m, new_packet.usn, new_packet)
@@ -132,27 +132,27 @@ defmodule Ssdp.Cache.DeviceDb do
   # Old and new packet have the same nt and same usn
   # check for differences, trigger notify and return new entry
   defp update_entry(old, new) do
-    diff = Ssdp.Packet.diff(old, new)
+    diff = Sise.Packet.diff(old, new)
 
     cond do
       Enum.empty?(diff) ->
         old
 
-      Ssdp.Packet.contains_location(diff) ->
+      Sise.Packet.contains_location(diff) ->
         take_preferred(old, new)
 
       true ->
-        Ssdp.Cache.Notifier.notify_update(new)
+        Sise.Cache.Notifier.notify_update(new)
         new
     end
   end
 
   defp take_preferred(old_packet, new_packet) do
-    old_is_local = Ssdp.Packet.is_localhost(old_packet)
-    new_is_local = Ssdp.Packet.is_localhost(new_packet)
-    pref_local = Ssdp.Config.detect_prefers_localhost()
+    old_is_local = Sise.Packet.is_localhost(old_packet)
+    new_is_local = Sise.Packet.is_localhost(new_packet)
+    pref_local = Sise.Config.detect_prefers_localhost()
 
-    merged = Ssdp.Packet.merge_packets(old_packet, new_packet)
+    merged = Sise.Packet.merge_packets(old_packet, new_packet)
 
     if pref_local == old_is_local && pref_local != new_is_local do
       # if the old packet fits the preference but the new one doesn't
@@ -161,7 +161,7 @@ defmodule Ssdp.Cache.DeviceDb do
     else
       # in all other cases we take the new entry (but fill in missing values
       # with the old entry's values)
-      Ssdp.Cache.Notifier.notify_update(merged)
+      Sise.Cache.Notifier.notify_update(merged)
       merged
     end
   end
