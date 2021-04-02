@@ -125,7 +125,7 @@ defmodule Sise.Packet do
   defmodule Notify do
     alias Sise.Packet.Utils
 
-    defstruct [:type, :location, :nt, :nts, :server, :usn, :host, :cache_control]
+    defstruct [:type, :location, :nt, :nts, :server, :usn, :host, :cache_control, :boot_id, :config_id, :secure_location, :next_boot_id]
 
     def parse(headers) do
       parse_accumulate(headers, %Sise.Packet.Notify{type: :notify})
@@ -149,16 +149,27 @@ defmodule Sise.Packet do
         "nts" -> %{packet | nts: content}
         "server" -> %{packet | server: content}
         "usn" -> %{packet | usn: content}
-        # Fields contained in M-Search responses:
 
-        # 'st' is basically the same as 'nt' in Notify messages
+        # 'st' is used in msearch-responses and is basically the same
+        # as 'nt' in Notify messages
         "st" -> %{packet | nt: content}
+
+        "bootid.upnp.org" -> %{packet | boot_id: content}
+        "configid.upnp.org" -> %{packet | config_id: content}
+        "nextbootid.upnp.org" -> %{packet | next_boot_id: content}
+        "securelocation.upnp.org" -> %{packet | secure_location: content}
+
+        # even if there's a body we'd ignore it
+        "content-length" -> packet
         # Contained for backwards compatibility: ignored
         "ext" -> packet
         # date when response was generated: ignored
         "date" -> packet
-        # even if there's a body we'd ignore it
-        "content-length" -> packet
+        # ignored for now
+        "searchport.upnp.org" -> packet
+
+        # whatever else there might be in the packet: ignore it
+        _ -> packet
       end
     end
   end
