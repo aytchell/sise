@@ -1,5 +1,6 @@
 defmodule Sise.Application do
   # SPDX-License-Identifier: Apache-2.0
+  @moduledoc false
 
   use Application
 

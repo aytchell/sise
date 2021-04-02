@@ -1,5 +1,6 @@
 defmodule Sis.Packet.Parse do
   # SPDX-License-Identifier: Apache-2.0
+  @moduledoc false
 
   def from_iolist(uhttp_request) do
     from_string(:erlang.iolist_to_binary(uhttp_request))

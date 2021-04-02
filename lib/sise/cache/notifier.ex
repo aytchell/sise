@@ -1,5 +1,6 @@
 defmodule Sise.Cache.Notifier do
   # SPDX-License-Identifier: Apache-2.0
+  @moduledoc false
 
   use GenServer
   require Logger
@@ -13,6 +14,8 @@ defmodule Sise.Cache.Notifier do
   end
 
   defmodule Observer do
+    @moduledoc false
+
     @enforce_keys [:pid, :type, :monitor_ref]
     defstruct [:pid, :type, :monitor_ref]
 

@@ -1,5 +1,6 @@
 defmodule Sise.Cache.DeviceDb do
   # SPDX-License-Identifier: Apache-2.0
+  @moduledoc false
 
   use GenServer
   require Logger

@@ -1,5 +1,6 @@
 defmodule Sise.MCast.Supervisor do
   # SPDX-License-Identifier: Apache-2.0
+  @moduledoc false
 
   use Supervisor
 

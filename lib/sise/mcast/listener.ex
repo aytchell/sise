@@ -1,5 +1,6 @@
 defmodule Sise.MCast.Listener do
   # SPDX-License-Identifier: Apache-2.0
+  @moduledoc false
 
   def child_spec(_arg) do
     %{

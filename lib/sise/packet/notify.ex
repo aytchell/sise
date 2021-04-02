@@ -1,5 +1,6 @@
 defmodule Sise.Packet.Notify do
   # SPDX-License-Identifier: Apache-2.0
+  @moduledoc false
 
   require Logger
 

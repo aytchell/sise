@@ -1,9 +1,12 @@
 defmodule Sise.Search.Sender do
   # SPDX-License-Identifier: Apache-2.0
+  @moduledoc false
 
   require Logger
 
   defmodule State do
+    @moduledoc false
+
     defstruct [:socket, :timer_ref, :attempts_left]
   end
 
