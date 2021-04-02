@@ -28,22 +28,23 @@ defmodule Sise.Cache.DeviceDb do
     GenServer.cast(Sise.Cache.DeviceDb, {:unsub, self(), notification_type})
   end
 
-  def add(packet) do
-    cast_if_nt_and_usn(packet, :add)
+  def add(raw_packet) do
+    cast_if_nt_and_usn(raw_packet, :add)
   end
 
-  def update(packet) do
-    cast_if_nt_and_usn(packet, :update)
+  def update(raw_packet) do
+    cast_if_nt_and_usn(raw_packet, :update)
   end
 
-  def delete(packet) do
-    cast_if_nt_and_usn(packet, :delete)
+  def delete(raw_packet) do
+    cast_if_nt_and_usn(raw_packet, :delete)
   end
 
-  defp cast_if_nt_and_usn(packet, command) do
-    if Map.has_key?(packet, :nt) do
-      if Map.has_key?(packet, :usn) do
-        GenServer.cast(Sise.Cache.DeviceDb, {command, packet})
+  defp cast_if_nt_and_usn(raw_packet, command) do
+    if Map.has_key?(raw_packet, :nt) do
+      if Map.has_key?(raw_packet, :usn) do
+        discovery = Sise.Packet.Raw.to_discovery(raw_packet)
+        GenServer.cast(Sise.Cache.DeviceDb, {command, discovery})
       else
         cmd = Atom.to_string(command)
         Logger.warn("Won't #{cmd} SSDP packet since it's missing 'USN'")
@@ -60,23 +61,23 @@ defmodule Sise.Cache.DeviceDb do
   end
 
   @impl true
-  def handle_cast({:add, packet}, entries) do
-    new_entries = add_or_update_packet(entries, packet)
+  def handle_cast({:add, discovery}, entries) do
+    new_entries = add_or_update_discovery(entries, discovery)
     {:noreply, new_entries}
   end
 
-  def handle_cast({:update, packet}, entries) do
-    new_entries = add_or_update_packet(entries, packet)
+  def handle_cast({:update, discovery}, entries) do
+    new_entries = add_or_update_discovery(entries, discovery)
     {:noreply, new_entries}
   end
 
-  def handle_cast({:delete, packet}, entries) do
-    nt_map = Map.get(entries, packet.nt)
+  def handle_cast({:delete, discovery}, entries) do
+    nt_map = Map.get(entries, discovery.nt)
 
     if is_nil(nt_map) do
       {:noreply, entries}
     else
-      entry = Map.get(nt_map, packet.usn)
+      entry = Map.get(nt_map, discovery.usn)
 
       if is_nil(entry) do
         {:noreply, entries}
@@ -104,26 +105,26 @@ defmodule Sise.Cache.DeviceDb do
     {:reply, flatten_entries(entries), entries}
   end
 
-  defp add_or_update_packet(current_packets, new_packet) do
-    nt_map = Map.get(current_packets, new_packet.nt)
+  defp add_or_update_discovery(current_packets, new_discovery) do
+    nt_map = Map.get(current_packets, new_discovery.nt)
 
     if is_nil(nt_map) do
-      Logger.info("Added first entry for #{new_packet.nt}")
-      Sise.Cache.Notifier.notify_add(new_packet)
-      Map.put(current_packets, new_packet.nt, %{new_packet.usn => new_packet})
+      Logger.info("Added first entry for #{new_discovery.nt}")
+      Sise.Cache.Notifier.notify_add(new_discovery)
+      Map.put(current_packets, new_discovery.nt, %{new_discovery.usn => new_discovery})
     else
-      if is_nil(Map.get(nt_map, new_packet.usn)) do
-        Logger.info("Added new entry for #{new_packet.nt}")
-        Sise.Cache.Notifier.notify_add(new_packet)
+      if is_nil(Map.get(nt_map, new_discovery.usn)) do
+        Logger.info("Added new entry for #{new_discovery.nt}")
+        Sise.Cache.Notifier.notify_add(new_discovery)
 
-        Map.update!(current_packets, new_packet.nt, fn m ->
-          Map.put(m, new_packet.usn, new_packet)
+        Map.update!(current_packets, new_discovery.nt, fn m ->
+          Map.put(m, new_discovery.usn, new_discovery)
         end)
       else
-        Logger.info("Updating entry for #{new_packet.nt}:#{new_packet.usn}")
+        Logger.info("Updating entry for #{new_discovery.nt}:#{new_discovery.usn}")
 
-        Map.update!(current_packets, new_packet.nt, fn m ->
-          Map.update!(m, new_packet.usn, fn old -> update_entry(old, new_packet) end)
+        Map.update!(current_packets, new_discovery.nt, fn m ->
+          Map.update!(m, new_discovery.usn, fn old -> update_entry(old, new_discovery) end)
         end)
       end
     end

@@ -3,26 +3,6 @@ defmodule Sise.Packet.Notify do
 
   require Logger
 
-  defstruct [:type, :location, :nt, :usn, :server,
-    :boot_id, :config_id, :secure_location, :next_boot_id,
-    :host, :nts, :cache_control]
-
-  @doc """
-  Merge two packets
-  One packet provides the "base values" the other one provides "updates"
-  on top of the base. If for any key there's no "updated" value then
-  the base value is used.
-  """
-  def merge_packets(base, on_top) do
-    Map.merge(base, on_top, fn _k, base_val, on_top_val ->
-      if is_nil(on_top_val) do
-        base_val
-      else
-        on_top_val
-      end
-    end)
-  end
-
   @doc """
   Compares two ssdp packets
   Returns :eq if they are equal, :neq otherwise

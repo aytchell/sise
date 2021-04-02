@@ -1,12 +1,6 @@
 defmodule Sise do
   # SPDX-License-Identifier: Apache-2.0
 
-  defmodule Discovery do
-    @enforce_keys [:location, :nt, :usn]
-    defstruct [:location, :nt, :usn, :server,
-      :boot_id, :config_id, :secure_location, :next_boot_id]
-  end
-
   def get_all() do
     Sise.Cache.DeviceDb.get_all()
   end
