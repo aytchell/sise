@@ -17,7 +17,6 @@ defmodule Sis.Packet.Parse do
         parse(%Sise.Packet.Raw{type: :notify}, headers)
 
       request_line == "M-SEARCH * HTTP/1.1" ->
-        Sise.Packet.MSearch.parse(headers)
         parse(%Sise.Packet.Raw{type: :msearch}, headers)
     end
   end
