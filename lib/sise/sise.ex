@@ -3,7 +3,8 @@ defmodule Sise do
 
   defmodule Discovery do
     @enforce_keys [:location, :nt, :usn]
-    defstruct [:location, :nt, :usn, :server, :boot_id, :config_id, :secure_location, :next_boot_id]
+    defstruct [:location, :nt, :usn, :server,
+      :boot_id, :config_id, :secure_location, :next_boot_id]
   end
 
   def get_all() do
