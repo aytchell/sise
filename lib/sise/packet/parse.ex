@@ -1,4 +1,4 @@
-defmodule Sis.Packet.Parse do
+defmodule Sise.Packet.Parse do
   # SPDX-License-Identifier: Apache-2.0
   @moduledoc false
 

@@ -93,4 +93,19 @@ defmodule Sise.Discovery do
         end
       end)
   end
+
+  @spec diff(Sise.Discovery.t(), Sise.Discovery.t()) :: boolean()
+  def diff(_old, _new) do
+  end
+
+  @spec localhost?(Sise.Discovery.t()) :: boolean()
+  def localhost?(discovery) do
+        pattern = :binary.compile_pattern(["://localhost:", "://localhost/", "://127."])
+
+    cond do
+      is_nil(discovery.location) -> false
+      String.contains?(discovery.location, pattern) -> true
+      true -> false
+    end
+  end
 end

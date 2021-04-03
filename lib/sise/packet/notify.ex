@@ -48,16 +48,6 @@ defmodule Sise.Packet.Notify do
     end
   end
 
-  def is_localhost(packet) do
-    pattern = :binary.compile_pattern(["://localhost:", "://localhost/", "://127."])
-
-    cond do
-      is_nil(packet.location) -> false
-      String.contains?(packet.location, pattern) -> true
-      true -> false
-    end
-  end
-
   defp zip_packets_to_valuetuple_list(packet_1, packet_2) do
     Enum.map(
       Enum.to_list(
