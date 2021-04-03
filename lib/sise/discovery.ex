@@ -95,7 +95,22 @@ defmodule Sise.Discovery do
   end
 
   @spec diff(Sise.Discovery.t(), Sise.Discovery.t()) :: boolean()
-  def diff(_old, _new) do
+  def diff(old, new) do
+    Enum.filter(
+      zip_discoveries(old, new),
+      fn {_key, v1, v2} -> v1 != v2 end)
+  end
+
+  defp zip_discoveries(first, second) do
+    Enum.map(
+      Enum.to_list(
+        Stream.zip(
+          Map.from_struct(first),
+          Map.from_struct(second)
+        )
+      ),
+      fn {{k1, v1}, {_k2, v2}} -> {k1, v1, v2} end
+    )
   end
 
   @spec localhost?(Sise.Discovery.t()) :: boolean()

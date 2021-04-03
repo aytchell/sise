@@ -107,7 +107,7 @@ defmodule Sise.Cache.DeviceDb do
     end
   end
 
-  def handle_delete(entries, discovery) do
+  defp handle_delete(entries, discovery) do
     case Sise.Cache.Entries.delete(entries, discovery) do
       nil -> entries
       {:delete, new_entries} ->

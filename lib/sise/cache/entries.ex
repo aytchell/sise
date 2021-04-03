@@ -9,6 +9,13 @@ defmodule Sise.Cache.Entries do
     %{}
   end
 
+  # our stored ssdp entries are organized as Map<:nt, Map<:usn, packet>>.
+  # This function flattens this structure so that we get a List<packet>
+  # which is required when we'd like to inform a new listener
+  def to_list(entries) do
+    Enum.flat_map(Map.values(entries), fn x -> Map.values(x) end)
+  end
+
   def get_entry(entries, nt, usn) do
     nt_map = Map.get(entries, nt)
 
@@ -22,7 +29,7 @@ defmodule Sise.Cache.Entries do
   def add_or_update(entries, discovery) do
     case get_entry(entries, discovery.nt, discovery.usn) do
       nil -> {:add, insert_discovery(entries, discovery)}
-      old_entry -> update_if_preferred(entries, old_entry, discovery)
+      old_entry -> update_if_needed(entries, old_entry, discovery)
     end
   end
 
@@ -33,20 +40,18 @@ defmodule Sise.Cache.Entries do
     end
   end
 
-  # our stored ssdp entries are organized as Map<:nt, Map<:usn, packet>>.
-  # This function flattens this structure so that we get a List<packet>
-  # which is required when we'd like to inform a new listener
-  def to_list(entries) do
-    Enum.flat_map(Map.values(entries), fn x -> Map.values(x) end)
-  end
-
-  defp update_if_preferred(entries, old_entry, discovery) do
+  defp update_if_needed(entries, old_entry, discovery) do
     if prefer_old(old_entry, discovery) do
       nil
     else
-      {:update,
-        insert_discovery(entries, Discovery.merge(old_entry, discovery)),
-        Discovery.diff(old_entry, discovery)}
+      diff = Discovery.diff(old_entry, discovery)
+      if Enum.empty?(diff) do
+        nil
+      else
+        {:update,
+          insert_discovery(entries, Discovery.merge(old_entry, discovery)),
+          diff}
+      end
     end
   end
 
