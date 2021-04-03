@@ -114,9 +114,9 @@ defmodule Sise.Cache.DeviceDb do
       :noop ->
         Logger.debug("Deleted entry is already gone")
         entries
-      {:delete, new_entries} ->
+      {:delete, del_entry, new_entries} ->
         Logger.info("Deleting SSDP packet #{inspect(discovery.nt)}")
-        Sise.Cache.Notifier.notify_delete(discovery)
+        Sise.Cache.Notifier.notify_delete(del_entry)
         new_entries
     end
   end

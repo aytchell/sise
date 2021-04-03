@@ -47,7 +47,7 @@ defmodule Sise.Cache.Entries do
   def delete(entries, discovery) do
     case get_entry(entries, discovery.nt, discovery.usn) do
       nil -> :noop
-      old_entry -> {:delete, delete_discovery(entries, old_entry)}
+      old_entry -> {:delete, old_entry, delete_discovery(entries, old_entry)}
     end
   end
 
