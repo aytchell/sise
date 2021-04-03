@@ -19,7 +19,6 @@ defmodule Sise.Packet.Raw do
       [] -> discovery
       [entry|tail] ->
         case entry do
-          {_, nil} -> copy_optional_raw(discovery, tail)
           {:server, value} ->
             copy_optional_raw(%{discovery|server: value}, tail)
           {:boot_id, value} ->
