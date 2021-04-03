@@ -17,8 +17,8 @@ defmodule Sise.Cache.DeviceDb do
     GenServer.start_link(__MODULE__, Sise.Cache.Entries.empty(), opts)
   end
 
-  def get_all() do
-    GenServer.call(Sise.Cache.DeviceDb, :get)
+  def get(notification_type) do
+    GenServer.call(Sise.Cache.DeviceDb, {:get, notification_type})
   end
 
   def subscribe(notification_type) do
@@ -79,7 +79,7 @@ defmodule Sise.Cache.DeviceDb do
 
   def handle_cast({:sub, pid, notification_type}, entries) do
     Sise.Cache.Notifier.subscribe(pid, notification_type,
-      Sise.Cache.Entries.to_list(entries))
+      Sise.Cache.Entries.as_list(entries, notification_type))
     {:noreply, entries}
   end
 
@@ -89,8 +89,8 @@ defmodule Sise.Cache.DeviceDb do
   end
 
   @impl true
-  def handle_call(:get, _from, entries) do
-    {:reply, Sise.Cache.Entries.to_list(entries), entries}
+  def handle_call({:get, notification_type}, _from, entries) do
+    {:reply, Sise.Cache.Entries.as_list(entries, notification_type), entries}
   end
 
   defp handle_add_or_update(entries, discovery) do

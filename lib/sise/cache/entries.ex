@@ -9,11 +9,22 @@ defmodule Sise.Cache.Entries do
     %{}
   end
 
-  # our stored ssdp entries are organized as Map<:nt, Map<:usn, packet>>.
-  # This function flattens this structure so that we get a List<packet>
-  # which is required when we'd like to inform a new listener
-  def to_list(entries) do
+  def as_list(entries, notification_type) do
+    case notification_type do
+      "all" -> all_as_list(entries)
+      nt -> by_nt_as_list(entries, nt)
+    end
+  end
+
+  defp all_as_list(entries) do
     Enum.flat_map(Map.values(entries), fn x -> Map.values(x) end)
+  end
+
+  defp by_nt_as_list(entries, notification_type) do
+    case Map.get(entries, notification_type) do
+      nil -> []
+      nt_map -> Map.values(nt_map)
+    end
   end
 
   def get_entry(entries, nt, usn) do

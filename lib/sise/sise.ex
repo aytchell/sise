@@ -9,8 +9,12 @@ defmodule Sise do
   updates) but it's not able to publish custom device or service information.
   """
 
+  def get(notification_type) do
+    Sise.Cache.DeviceDb.get(notification_type)
+  end
+
   def get_all() do
-    Sise.Cache.DeviceDb.get_all()
+    Sise.Cache.DeviceDb.get("all")
   end
 
   def subscribe(notification_type) do
