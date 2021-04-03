@@ -35,18 +35,18 @@ defmodule Sise.Cache.Entries do
 
   def delete(entries, discovery) do
     case get_entry(entries, discovery.nt, discovery.usn) do
-      nil -> nil
+      nil -> :noop
       old_entry -> {:delete, delete_discovery(entries, old_entry)}
     end
   end
 
   defp update_if_needed(entries, old_entry, discovery) do
     if prefer_old(old_entry, discovery) do
-      nil
+      :noop
     else
       diff = Discovery.diff(old_entry, discovery)
       if Enum.empty?(diff) do
-        nil
+        :noop
       else
         {:update,
           insert_discovery(entries, Discovery.merge(old_entry, discovery)),

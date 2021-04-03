@@ -95,7 +95,7 @@ defmodule Sise.Cache.DeviceDb do
 
   defp handle_add_or_update(entries, discovery) do
     case Sise.Cache.Entries.add_or_update(entries, discovery) do
-      nil -> entries
+      :noop -> entries
       {:add, new_entries} ->
         Logger.info("Added new entry for #{discovery.nt}")
         Sise.Cache.Notifier.notify_add(discovery)
@@ -109,7 +109,7 @@ defmodule Sise.Cache.DeviceDb do
 
   defp handle_delete(entries, discovery) do
     case Sise.Cache.Entries.delete(entries, discovery) do
-      nil -> entries
+      :noop -> entries
       {:delete, new_entries} ->
         Logger.info("Deleting SSDP packet #{inspect(discovery.nt)}")
         Sise.Cache.Notifier.notify_delete(discovery)
