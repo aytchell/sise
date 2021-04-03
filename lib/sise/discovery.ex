@@ -94,25 +94,31 @@ defmodule Sise.Discovery do
       end)
   end
 
-  @spec diff(Sise.Discovery.t(), Sise.Discovery.t()) :: boolean()
-  def diff(old, new) do
+  @doc """
+  Computes a diff between two Discovery structs
+
+  Given two Discovery structs this method will compute a diff. The returned
+  list will contain 3-tuples where
+  - the first entry is the Discovery's key whose values differ in both structs
+  - the second entry is the value of `left` and
+  - the third entry is the value of `right`
+
+  If the returned list is empty it means that the two given structs are equal.
+  """
+  @spec diff(Sise.Discovery.t(), Sise.Discovery.t()) :: [{atom(), String.t(), String.t()}]
+  def diff(left, right) do
     Enum.filter(
-      zip_discoveries(old, new),
+      zip_discoveries(left, right),
       fn {_key, v1, v2} -> v1 != v2 end)
   end
 
-  defp zip_discoveries(first, second) do
-    Enum.map(
-      Enum.to_list(
-        Stream.zip(
-          Map.from_struct(first),
-          Map.from_struct(second)
-        )
-      ),
-      fn {{k1, v1}, {_k2, v2}} -> {k1, v1, v2} end
-    )
-  end
+  @doc """
+  Is the discovered device or service running on localhost?
 
+  This function inspects the `location:` header of the discovery. If this
+  header indicates that the found device or service is running on localhost
+  then this function will return `true` (otherwise `false`)
+  """
   @spec localhost?(Sise.Discovery.t()) :: boolean()
   def localhost?(discovery) do
         pattern = :binary.compile_pattern(["://localhost:", "://localhost/", "://127."])
@@ -122,5 +128,17 @@ defmodule Sise.Discovery do
       String.contains?(discovery.location, pattern) -> true
       true -> false
     end
+  end
+
+  defp zip_discoveries(left, right) do
+    Enum.map(
+      Enum.to_list(
+        Stream.zip(
+          Map.from_struct(left),
+          Map.from_struct(right)
+        )
+      ),
+      fn {{k1, v1}, {_k2, v2}} -> {k1, v1, v2} end
+    )
   end
 end
