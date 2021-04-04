@@ -22,7 +22,7 @@ defmodule Sise.MixProject do
       docs: [
         main: "Sise",
         authors: ["Hannes Lerchl"],
-        extras: ["LICENSE.txt"],
+        extras: ["LICENSE.txt", "Changelog.md"],
         source_ref: "releases/#{@version}"
       ]
     ]
@@ -46,7 +46,7 @@ defmodule Sise.MixProject do
   # Metadata for the Hex package repository
   defp package do
     [
-      name: "Sise",
+      name: "sise",
       licenses: ["Apache-2.0"],
       maintainers: ["Hannes Lerchl"],
       links: %{ "Github" => @repo_url },
