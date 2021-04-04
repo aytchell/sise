@@ -78,8 +78,12 @@ defmodule Sise.Cache.DeviceDb do
   end
 
   def handle_cast({:sub, pid, notification_type}, entries) do
-    Sise.Cache.Notifier.subscribe(pid, notification_type,
-      Sise.Cache.Entries.as_list(entries, notification_type))
+    Sise.Cache.Notifier.subscribe(
+      pid,
+      notification_type,
+      Sise.Cache.Entries.as_list(entries, notification_type)
+    )
+
     {:noreply, entries}
   end
 
@@ -98,10 +102,12 @@ defmodule Sise.Cache.DeviceDb do
       :noop ->
         Logger.debug("Discovered entry is already known")
         entries
+
       {:add, new_entries} ->
         Logger.info("Added new entry for #{discovery.nt}")
         Sise.Cache.Notifier.notify_add(discovery)
         new_entries
+
       {:update, new_entries, diff} ->
         Logger.info("Updating entry for #{discovery.nt}:#{discovery.usn}")
         Sise.Cache.Notifier.notify_update(discovery, diff)
@@ -114,6 +120,7 @@ defmodule Sise.Cache.DeviceDb do
       :noop ->
         Logger.debug("Deleted entry is already gone")
         entries
+
       {:delete, del_entry, new_entries} ->
         Logger.info("Deleting SSDP packet #{inspect(discovery.nt)}")
         Sise.Cache.Notifier.notify_delete(del_entry)

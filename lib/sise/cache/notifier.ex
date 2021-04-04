@@ -92,8 +92,10 @@ defmodule Sise.Cache.Notifier do
   end
 
   defp notify_observer_list(nt, observer_list, notification) do
-    Enum.each(observer_list,
-      fn obs -> notify_observer(obs, nt, notification) end)
+    Enum.each(
+      observer_list,
+      fn obs -> notify_observer(obs, nt, notification) end
+    )
   end
 
   defp notify_observer(obs, nt, notification) do

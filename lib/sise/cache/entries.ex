@@ -49,12 +49,11 @@ defmodule Sise.Cache.Entries do
       :noop
     else
       diff = Discovery.diff(old_entry, discovery)
+
       if Enum.empty?(diff) do
         :noop
       else
-        {:update,
-          insert_discovery(entries, Discovery.merge(old_entry, discovery)),
-          diff}
+        {:update, insert_discovery(entries, Discovery.merge(old_entry, discovery)), diff}
       end
     end
   end
@@ -64,7 +63,8 @@ defmodule Sise.Cache.Entries do
       entries,
       discovery.nt,
       %{discovery.usn => discovery},
-      fn nt_map -> Map.put(nt_map, discovery.usn, discovery) end)
+      fn nt_map -> Map.put(nt_map, discovery.usn, discovery) end
+    )
   end
 
   defp prefer_old(old_entry, discovery) do
@@ -79,8 +79,7 @@ defmodule Sise.Cache.Entries do
     if map_size(Map.get(entries, old_entry.nt)) == 1 do
       Map.delete(entries, old_entry.nt)
     else
-      Map.update!(entries, old_entry.nt,
-        fn nt_map -> Map.delete(nt_map, old_entry.usn) end)
+      Map.update!(entries, old_entry.nt, fn nt_map -> Map.delete(nt_map, old_entry.usn) end)
     end
   end
 end

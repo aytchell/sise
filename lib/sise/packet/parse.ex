@@ -37,21 +37,17 @@ defmodule Sise.Packet.Parse do
       "nt" -> %{packet | nt: content}
       "usn" -> %{packet | usn: content}
       "server" -> %{packet | server: content}
-
       "bootid.upnp.org" -> %{packet | boot_id: content}
       "configid.upnp.org" -> %{packet | config_id: content}
       "securelocation.upnp.org" -> %{packet | secure_location: content}
       "nextbootid.upnp.org" -> %{packet | next_boot_id: content}
-
       "host" -> %{packet | host: content}
       "nts" -> %{packet | nts: content}
       "cache-control" -> %{packet | cache_control: content}
-
-        # 'st' ("search target") is used in msearch-requests to indicate the
-        # desired service or device.
-        # It is also used in m-search responses where it's basically the same as 'nt'
+      # 'st' ("search target") is used in msearch-requests to indicate the
+      # desired service or device.
+      # It is also used in m-search responses where it's basically the same as 'nt'
       "st" -> %{packet | nt: content, st: content}
-
       "man" -> %{packet | man: content}
       "mx" -> %{packet | mx: content}
       "user-agent" -> %{packet | user_agent: content}

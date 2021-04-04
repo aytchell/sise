@@ -6,8 +6,7 @@ defmodule Sise.Discovery do
   """
 
   @enforce_keys [:location, :nt, :usn]
-  defstruct [:location, :nt, :usn, :server,
-    :boot_id, :config_id, :secure_location, :next_boot_id]
+  defstruct [:location, :nt, :usn, :server, :boot_id, :config_id, :secure_location, :next_boot_id]
 
   @typedoc """
   Describes a discovered device or service
@@ -64,16 +63,15 @@ defmodule Sise.Discovery do
     device or service. Please consult th spec for detailed information.
   """
   @type t :: %__MODULE__{
-    location: String.t,
-    nt: String.t,
-    usn: String.t,
-    server: nil | String.t,
-    boot_id: nil | String.t,
-    config_id: nil | String.t,
-    secure_location: nil | String.t,
-    next_boot_id: nil | String.t
-  }
-
+          location: String.t(),
+          nt: String.t(),
+          usn: String.t(),
+          server: nil | String.t(),
+          boot_id: nil | String.t(),
+          config_id: nil | String.t(),
+          secure_location: nil | String.t(),
+          next_boot_id: nil | String.t()
+        }
 
   @doc """
   Merge two discovery packets; uses `on_top`'s values if available
@@ -84,14 +82,13 @@ defmodule Sise.Discovery do
   the base value is used.
   """
   def merge(base, on_top) do
-    Map.merge(base, on_top,
-      fn _k, base_val, on_top_val ->
-        if is_nil(on_top_val) do
-          base_val
-        else
-          on_top_val
-        end
-      end)
+    Map.merge(base, on_top, fn _k, base_val, on_top_val ->
+      if is_nil(on_top_val) do
+        base_val
+      else
+        on_top_val
+      end
+    end)
   end
 
   @doc """
@@ -109,7 +106,8 @@ defmodule Sise.Discovery do
   def diff(left, right) do
     Enum.filter(
       zip_discoveries(left, right),
-      fn {_key, v1, v2} -> v1 != v2 end)
+      fn {_key, v1, v2} -> v1 != v2 end
+    )
   end
 
   @doc """
@@ -121,7 +119,7 @@ defmodule Sise.Discovery do
   """
   @spec localhost?(Sise.Discovery.t()) :: boolean()
   def localhost?(discovery) do
-        pattern = :binary.compile_pattern(["://localhost:", "://localhost/", "://127."])
+    pattern = :binary.compile_pattern(["://localhost:", "://localhost/", "://127."])
 
     cond do
       is_nil(discovery.location) -> false

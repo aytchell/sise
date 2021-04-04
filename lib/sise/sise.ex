@@ -8,7 +8,7 @@ defmodule Sise do
   Sise will listen on the network for announcements of available UPnP devices
   and services. Additionally it will send out search requests from time to
   time. All discovered devices will be stored by Sise.
-  
+
   A client of this
   library can either fetch the discoveries or subscribe for notifications (on
   subscription the listener will be called with the already discovered
@@ -80,7 +80,7 @@ defmodule Sise do
 
   @doc """
   Unsubribe from notifications about discoveries.
-  
+
   Note that the notification mechanism does a very simple matching for
   notification types. If you subscribe to multiple concrete services/devices
   and then `unsubscribe(:all)`, they will all be removed.
