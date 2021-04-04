@@ -13,6 +13,9 @@ defmodule Sise do
   library can either fetch the discoveries or subscribe for notifications (on
   subscription the listener will be called with the already discovered
   devices/services).
+
+  Sise implements the Application behaviour and thus will start itself
+  with detecting devices and service.
   """
 
   @typedoc """
