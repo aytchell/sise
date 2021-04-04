@@ -40,11 +40,8 @@ defmodule Sise do
     Sise.Cache.DeviceDb.subscribe(notification_type)
   end
 
+  @spec unsubscribe(nt()) :: nil
   def unsubscribe(notification_type) do
     Sise.Cache.DeviceDb.unsubscribe(notification_type)
-  end
-
-  def unsubscribe_all() do
-    Sise.Cache.DeviceDb.unsubscribe("all")
   end
 end
