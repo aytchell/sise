@@ -35,12 +35,9 @@ defmodule Sise do
     Sise.Cache.DeviceDb.get(notification_type)
   end
 
+  @spec subscribe(nt()) :: nil
   def subscribe(notification_type) do
     Sise.Cache.DeviceDb.subscribe(notification_type)
-  end
-
-  def subscribe_all() do
-    Sise.Cache.DeviceDb.subscribe("all")
   end
 
   def unsubscribe(notification_type) do

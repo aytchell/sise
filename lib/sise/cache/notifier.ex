@@ -97,7 +97,7 @@ defmodule Sise.Cache.Notifier do
 
   defp notify_observer(packet, what, obs) do
     cond do
-      obs.type == "all" -> send(obs.pid, {what, packet})
+      obs.type == :all -> send(obs.pid, {what, packet})
       obs.type == packet.nt -> send(obs.pid, {what, packet})
       true -> nil
     end
@@ -114,7 +114,7 @@ defmodule Sise.Cache.Notifier do
             delete_observer(tail, pid, type, [head | acc])
 
           true ->
-            if type == "all" || type == head.type do
+            if type == :all || type == head.type do
               Process.demonitor(head.monitor_ref)
               delete_observer(tail, pid, type, acc)
             else
