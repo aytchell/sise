@@ -102,9 +102,9 @@ defmodule Sise.Cache.DeviceDb do
         Logger.info("Added new entry for #{discovery.nt}")
         Sise.Cache.Notifier.notify_add(discovery)
         new_entries
-      {:update, new_entries, _diff} ->
+      {:update, new_entries, diff} ->
         Logger.info("Updating entry for #{discovery.nt}:#{discovery.usn}")
-        Sise.Cache.Notifier.notify_update(discovery)
+        Sise.Cache.Notifier.notify_update(discovery, diff)
         new_entries
     end
   end

@@ -48,14 +48,30 @@ defmodule Sise do
     discovery
   - receive a message for every change in the future
 
+  It is possible to subscribe to multiple different notification types.
+
   The possible notification messages to be received are these:
   ```
   {:ssdp_add, Sise.Discovery.t()}
-  {:ssdp_update, Sise.Discovery.t()}
+  ```
+  This message informs that a new device or service has been discovered. It
+  will contain a struct with all available information on the discovery.
+
+  ```
+  {:ssdp_update, Sise.Discovery.t(), [{atom(), String.t(), String.t()}]}
+  ```
+  Informs the listener that the available information about a known
+  device/service has changed. The message will carry the new version of
+  the Discovery struct. It will also carry a list with the differences
+  between the old and the new device/service information.
+
+  ```
   {:ssdp_delete, Sise.Discovery.t()}
   ```
 
-  It is possible to subscribe to multiple different notification types.
+  Informs that a device/service is no longer available. The message will
+  carry the last known version of the Discovery struct.
+  See also `Sise.Discovery.diff/2`.
   """
   @spec subscribe(nt()) :: nil
   def subscribe(notification_type) do
@@ -68,7 +84,7 @@ defmodule Sise do
   Note that the notification mechanism does a very simple matching for
   notification types. If you subscribe to multiple concrete services/devices
   and then `unsubscribe(:all)`, they will all be removed.
-  However if you subscribe to `:all` services/device and then unsubscribe from 
+  However if you subscribe to `:all` services/devices and then unsubscribe from 
   a concrete one you will still get all notifications.
   """
   @spec unsubscribe(nt()) :: nil

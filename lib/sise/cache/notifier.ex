@@ -40,8 +40,8 @@ defmodule Sise.Cache.Notifier do
     GenServer.cast(Sise.Cache.Notifier, {:notify_add, packet})
   end
 
-  def notify_update(packet) do
-    GenServer.cast(Sise.Cache.Notifier, {:notify_update, packet})
+  def notify_update(packet, diff) do
+    GenServer.cast(Sise.Cache.Notifier, {:notify_update, packet, diff})
   end
 
   def notify_delete(packet) do
@@ -67,17 +67,17 @@ defmodule Sise.Cache.Notifier do
   end
 
   def handle_cast({:notify_add, packet}, observer_list) do
-    notify_observer_list(packet, :ssdp_add, observer_list)
+    notify_observer_list(packet.nt, observer_list, {:ssdp_add, packet})
     {:noreply, observer_list}
   end
 
-  def handle_cast({:notify_update, packet}, observer_list) do
-    notify_observer_list(packet, :ssdp_update, observer_list)
+  def handle_cast({:notify_update, packet, diff}, observer_list) do
+    notify_observer_list(packet.nt, observer_list, {:ssdp_update, packet, diff})
     {:noreply, observer_list}
   end
 
   def handle_cast({:notify_delete, packet}, observer_list) do
-    notify_observer_list(packet, :ssdp_delete, observer_list)
+    notify_observer_list(packet.nt, observer_list, {:ssdp_delete, packet})
     {:noreply, observer_list}
   end
 
@@ -91,14 +91,15 @@ defmodule Sise.Cache.Notifier do
     {:noreply, observer_list}
   end
 
-  defp notify_observer_list(packet, what, observer_list) do
-    Enum.each(observer_list, fn obs -> notify_observer(packet, what, obs) end)
+  defp notify_observer_list(nt, observer_list, notification) do
+    Enum.each(observer_list,
+      fn obs -> notify_observer(obs, nt, notification) end)
   end
 
-  defp notify_observer(packet, what, obs) do
+  defp notify_observer(obs, nt, notification) do
     cond do
-      obs.type == :all -> send(obs.pid, {what, packet})
-      obs.type == packet.nt -> send(obs.pid, {what, packet})
+      obs.type == :all -> send(obs.pid, notification)
+      obs.type == nt -> send(obs.pid, notification)
       true -> nil
     end
   end
