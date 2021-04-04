@@ -23,6 +23,7 @@ defmodule Sise.MixProject do
         main: "Sise",
         authors: ["Hannes Lerchl"],
         extras: ["LICENSE.txt"],
+        source_ref: "releases/#{@version}"
       ]
     ]
   end
