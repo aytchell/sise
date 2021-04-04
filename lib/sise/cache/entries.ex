@@ -9,18 +9,11 @@ defmodule Sise.Cache.Entries do
     %{}
   end
 
-  def as_list(entries, notification_type) do
-    case notification_type do
-      "all" -> all_as_list(entries)
-      nt -> by_nt_as_list(entries, nt)
-    end
-  end
-
-  defp all_as_list(entries) do
+  def as_list(entries, :all) do
     Enum.flat_map(Map.values(entries), fn x -> Map.values(x) end)
   end
 
-  defp by_nt_as_list(entries, notification_type) do
+  def as_list(entries, notification_type) do
     case Map.get(entries, notification_type) do
       nil -> []
       nt_map -> Map.values(nt_map)
