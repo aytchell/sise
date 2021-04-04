@@ -1,4 +1,7 @@
 defmodule Sise.Config do
+  # SPDX-License-Identifier: Apache-2.0
+  @moduledoc false
+
   @twenty_minutes 20 * 60 * 1_000
 
   @msearch_ttl_default 2

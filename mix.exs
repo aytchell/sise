@@ -1,7 +1,7 @@
 defmodule Sise.MixProject do
   use Mix.Project
 
-  @version "0.1.0"
+  @version "0.9.0"
 
   def project do
     [
@@ -13,10 +13,8 @@ defmodule Sise.MixProject do
 
       name: "Sise",
       source_url: "https://github.com/aytchell/sise",
-      homepage_url: "https://github.com/aytchell/sise",
       docs: [
-        main: "Sise",
-        extras: ["README.md"]
+        main: "Sise"
       ]
     ]
   end
