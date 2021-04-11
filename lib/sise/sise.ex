@@ -19,7 +19,7 @@ defmodule Sise do
   """
 
   @typedoc """
-  Notification type
+  SSDP's "notification type" (aka device or service others might need)
 
   This type is used as a parameter to select the 'notification type' the
   caller is interested in.
@@ -82,7 +82,7 @@ defmodule Sise do
   end
 
   @doc """
-  Unsubribe from notifications about discoveries.
+  Unsubscribe from notifications about discoveries.
 
   Note that the notification mechanism does a very simple matching for
   notification types. If you subscribe to multiple concrete services/devices
