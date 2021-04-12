@@ -7,9 +7,11 @@ The format is based on
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [Unreleased]
+## [0.9.1] - 2021-04-12
 
-- ...
+### Added
+
+* Extended Readme; tiny doc fixes
 
 ## [0.9.0] - 2021-04-04
 
