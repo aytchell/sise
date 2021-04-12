@@ -10,8 +10,12 @@ defmodule Sise.Config do
   @msearch_repeat_interval_msec_default @twenty_minutes
   @msearch_max_seconds_default 5
 
-  # UPnP/SSDP spec says:
-  # "The TTL for the IP packet should default to 2 and should be configurable"
+  @doc """
+  The TTL entry in the IP-header of the M-Search packet
+
+  UPnP/SSDP spec says:
+  > "The TTL for the IP packet should default to 2 and should be configurable"
+  """
   def msearch_ttl() do
     case Application.fetch_env(:Sise, :msearch_ttl) do
       {:ok, value} -> value
@@ -19,6 +23,12 @@ defmodule Sise.Config do
     end
   end
 
+  @doc """
+  Should the IP-Stack report multicast packets from localhost?
+
+  Currently this is not useful as we don't handle incoming multicast
+  packets at all.
+  """
   def msearch_find_locals() do
     case Application.fetch_env(:Sise, :msearch_find_locals) do
       {:ok, value} -> value
@@ -26,6 +36,13 @@ defmodule Sise.Config do
     end
   end
 
+  @doc """
+  Search target to be used for M-Searches
+
+  Which search target ('st' in SSDP lingo) should be used when sending out an
+  M-Search multicast. Other devices will only respond if they somehow fit the
+  search target ('ssdp:all' is the catch-all target).
+  """
   def msearch_search_target() do
     case Application.fetch_env(:Sise, :msearch_search_target) do
       {:ok, value} -> value
@@ -34,7 +51,11 @@ defmodule Sise.Config do
   end
 
   @doc """
-  The number of milliseconds between to M-Search multicasts
+  The number of milliseconds between two M-Search multicasts attempts
+
+  From "time to time" Sise will send out an M-Search multicast packet via UDP.
+  This parameter says, how long the "sleep interval" between two multicasts
+  should be. Sise only supports a constant time interval.
   """
   def msearch_repeat_interval_msec() do
     case Application.fetch_env(:Sise, :msearch_repeat_interval_msec) do
@@ -45,7 +66,7 @@ defmodule Sise.Config do
 
   @doc """
   The number of seconds within which other devices should respond to
-  our M-Search request. Should be 1 <= mx <= 5
+  our M-Search request. Should be 1 <= mx <= 5 (according to the spec).
   """
   def msearch_max_seconds() do
     case Application.fetch_env(:Sise, :msearch_max_seconds) do

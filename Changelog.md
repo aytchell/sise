@@ -7,6 +7,12 @@ The format is based on
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [Unreleased]
+
+### Added
+
+* Added doc strings to the config module
+
 ## [0.9.1] - 2021-04-12
 
 ### Added

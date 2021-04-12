@@ -30,6 +30,11 @@ defp deps do
 end
 ```
 
+## Contribution
+
+If you have any suggestions for improvements (I'm quite new to Elixir)
+then please drop a note or open a PR.
+
 ## License
 
 Copyright 2021, Hannes Lerchl
