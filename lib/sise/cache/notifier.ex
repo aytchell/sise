@@ -57,7 +57,15 @@ defmodule Sise.Cache.Notifier do
   def handle_cast({:sub, pid, type, packet_list}, observer_list) do
     ref = Process.monitor(pid)
     obs = Observer.build(pid, type, ref)
-    Enum.each(packet_list, fn pkg -> notify_observer(pkg, :ssdp_add, obs) end)
+
+    Enum.each(packet_list, fn pkg ->
+      notify_observer(
+        obs,
+        pkg.nt,
+        {:ssdp_add, pkg}
+      )
+    end)
+
     {:noreply, [obs | observer_list]}
   end
 

@@ -11,13 +11,11 @@ defmodule Sise.MixProject do
       elixir: "~> 1.9",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
-
       source_url: @repo_url,
 
       # Hex
       description: "A simple to use SSDP client",
       package: package(),
-
       name: "Sise",
       docs: [
         main: "Sise",
@@ -49,7 +47,7 @@ defmodule Sise.MixProject do
       name: "sise",
       licenses: ["Apache-2.0"],
       maintainers: ["Hannes Lerchl"],
-      links: %{ "Github" => @repo_url },
+      links: %{"Github" => @repo_url}
     ]
   end
 end

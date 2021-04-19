@@ -7,11 +7,15 @@ The format is based on
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [Unreleased]
+## [0.9.2] - 2021-04-19
 
 ### Added
 
 * Added doc strings to the config module
+
+### Fixed
+
+* Fixed a crash when initially notifying newly subscribed listeners
 
 ## [0.9.1] - 2021-04-12
 
