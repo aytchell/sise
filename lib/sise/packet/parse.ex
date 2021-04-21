@@ -54,6 +54,8 @@ defmodule Sise.Packet.Parse do
       "tcpport.upnp.org" -> %{packet | tcpport: content}
       "cpfn.upnp.org" -> %{packet | cpfn: content}
       "cpuuid.upnp.org" -> %{packet | cpuuid: content}
+      # ignore the rest
+      _ -> packet
     end
   end
 

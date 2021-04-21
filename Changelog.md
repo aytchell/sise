@@ -7,6 +7,14 @@ The format is based on
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.9.3] - 2021-04-27
+
+### Fixed
+
+* When parsing http headers of incoming ssdp message we now ignore unknown
+  headers thus saving the process from crashing (and we can deliver the known
+  elements)
+
 ## [0.9.2] - 2021-04-19
 
 ### Added

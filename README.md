@@ -25,7 +25,7 @@ for the latest generated version.
 ```
 defp deps do
   [
-    {:sise, "~> 0.9.2"}
+    {:sise, "~> 0.9.3"}
   ]
 end
 ```
